@@ -15,6 +15,7 @@
     1. `Ask ChatGPT to generate a SQL query **without giving any schema information**.`
         
         제시한 쿼리는 다음과 같음.
+- 쿼리 시작 부분
         
         > ****1. Creating Tables****
         Tables are the basic unit of data storage in an Oracle Database. Data is stored in rows and columns. You define a table with a table name, such as employees, and a set of columns. You give each column a column name, such as employee_id, last_name, and job_id; a datatype, such as VARCHAR2, DATE, or NUMBER; and a width. The width can be predetermined by the datatype, as in DATE. If columns are of the NUMBER datatype, define precision and scale instead of width. A row is a collection of column information corresponding to a single record.
@@ -402,7 +403,8 @@
     > 
     > → 자 이제  "Find the department that has the highest average salary" 문제를 해결하는 SQL 쿼리를 생성해줘
     > 
-    
+
+- 쿼리 종료
     결과
     
     ```sql
