@@ -14,8 +14,8 @@
 - Find the department that have the highest average salary
     1. `Ask ChatGPT to generate a SQL query **without giving any schema information**.`
         
-        제시한 쿼리는 다음과 같음.
-- 쿼리 시작 부분
+        제시한 프롬프트는 다음과 같음.
+- 프롬프트 시작 부분
         
         > ****1. Creating Tables****
         Tables are the basic unit of data storage in an Oracle Database. Data is stored in rows and columns. You define a table with a table name, such as employees, and a set of columns. You give each column a column name, such as employee_id, last_name, and job_id; a datatype, such as VARCHAR2, DATE, or NUMBER; and a width. The width can be predetermined by the datatype, as in DATE. If columns are of the NUMBER datatype, define precision and scale instead of width. A row is a collection of column information corresponding to a single record.
@@ -257,23 +257,24 @@
         > -> 자 이제  "Find the department that has the highest average salary" 문제를 해결하는 SQL 쿼리를 생성해줘
         >
   
-- 쿼리 끝
-        결과
+- 프롬프트 끝
+
+  
+- 결과
         
-        ```sql
         SELECT d.name AS department_name, AVG(e.salary) AS average_salary
         FROM departments d
         INNER JOIN employees e ON d.deptno = e.deptno
         GROUP BY d.name
         ORDER BY AVG(e.salary) DESC
         FETCH FIRST 1 ROW ONLY;
-        ```
         
 
 ---
 
-1. `Ask ChatGPT to generate a SQL query **with schema information**.`
-    
+2. `Ask ChatGPT to generate a SQL query **with schema information**.`
+
+- 프롬프트 시작
     > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
     > 
     > 
@@ -405,23 +406,24 @@
     > → 자 이제  "Find the department that has the highest average salary" 문제를 해결하는 SQL 쿼리를 생성해줘
     > 
 
-- 쿼리 종료
-    결과
+- 프롬프트 종료
+
+- 결과
     
-    ```sql
     SELECT d.dept_name, AVG(i.salary) as avg_salary
     FROM instructor i
     JOIN department d ON i.dept_name = d.dept_name
     GROUP BY d.dept_name
     ORDER BY avg_salary DESC
     FETCH FIRST ROW ONLY;
-    ```
     
 
 ---
 
-1.  `Give **some additional information**(i.e., explanation of table schema, PK/FK relationship, clause you want to use etc.) to ChatGPT to make the SQL query more accurate.`
-    
+3.  `Give **some additional information**(i.e., explanation of table schema, PK/FK relationship, clause you want to use etc.) to ChatGPT to make the SQL query more accurate.`
+
+- 프롬프트 시작
+
     > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
     > 
     > 
@@ -552,10 +554,12 @@
     > 
     > → 자 이제  "Find the department that has the highest average salary" 문제를 해결하는 SQL 쿼리를 생성해줘
     > 
+
+- 프롬프트 끝
+
+  
+- 결과
     
-    결과
-    
-    ```sql
     -- Step 1: Calculate the average salary for each department
     SELECT dept_name, AVG(salary) AS avg_salary
     FROM instructor
@@ -564,7 +568,8 @@
     -- Step 2: Order the results by the average salary in descending order and limit to the top result
     ORDER BY avg_salary DESC
     FETCH FIRST 1 ROW ONLY;
-    ```
+
+
     
     ***분석***
     
@@ -582,7 +587,9 @@
     1. `Ask ChatGPT to generate a SQL query **without giving any schema information**.`
         
         제시한 쿼리는 다음과 같음.
-        
+- 프롬프트 시작
+
+  
         > ****1. Creating Tables****
         Tables are the basic unit of data storage in an Oracle Database. Data is stored in rows and columns. You define a table with a table name, such as employees, and a set of columns. You give each column a column name, such as employee_id, last_name, and job_id; a datatype, such as VARCHAR2, DATE, or NUMBER; and a width. The width can be predetermined by the datatype, as in DATE. If columns are of the NUMBER datatype, define precision and scale instead of width. A row is a collection of column information corresponding to a single record.
         You can specify rules for each column of a table. These rules are called integrity constraints. One example is a NOT NULL integrity constraint. This constraint forces the column to contain a value in every row.
@@ -822,10 +829,11 @@
         > 
         > -> 다음의 문법을 바탕으로 Find the average total credits over all prior years. 의 결과를 출력하는 쿼리를 생각해봐 그리고 각각의 과정이 어떻게 이뤄지는지 확인해봐
         > 
+
+- 프롬프트 끝
+
+- 결과
         
-        결과
-        
-        ```sql
         SELECT AVG(tot_cred) AS avg_total_credits
         FROM student
         WHERE ID NOT IN (
@@ -833,10 +841,11 @@
             FROM takes
             WHERE year = EXTRACT(YEAR FROM CURRENT_DATE)
         );
-        ```
         
-1. `Ask ChatGPT to generate a SQL query **with schema information**.`
-    
+2. `Ask ChatGPT to generate a SQL query **with schema information**.`
+
+- 프롬프트 시작
+  
     > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
     > 
     > 
@@ -966,10 +975,12 @@
     > 
     > → 자 이제 Find the average total credits over all prior years. 의 결과를 출력하는 쿼리를 작성해줘
     > 
+
+- 프롬프트 끝
+
+  
+- 결과
     
-    결과
-    
-    ```sql
     SELECT AVG(tot_cred) as average_total_credits
     FROM student
     WHERE ID NOT IN (
@@ -977,10 +988,11 @@
         FROM takes
         WHERE year = EXTRACT(YEAR FROM SYSDATE)
     );
-    ```
     
-2.  `Give **some additional information**(i.e., explanation of table schema, PK/FK relationship, clause you want to use etc.) to ChatGPT to make the SQL query more accurate.`
-    
+3.  `Give **some additional information**(i.e., explanation of table schema, PK/FK relationship, clause you want to use etc.) to ChatGPT to make the SQL query more accurate.`
+
+- 프롬프트 시작
+  
     > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
     > 
     > 
@@ -1118,10 +1130,12 @@
     > 
     > → 이걸 주의하면서 Find the average total credits over all prior years. 의 결과를 출력하는 쿼리를 작성해줘. 쿼리 결과만 주면 돼.
     > 
+
+- 프롬프트 끝
+
+  
+- 결과
     
-    결과
-    
-    ```sql
     SELECT AVG(tot_cred) AS average_total_credits
     FROM student
     WHERE ID NOT IN (
@@ -1129,7 +1143,6 @@
       FROM takes
       WHERE year = EXTRACT(YEAR FROM CURRENT_DATE)
     );
-    ```
     
     ***분석***
     
@@ -1146,9 +1159,12 @@
 
 - List the last 25% of employees when ranking by salary. (Evaluation data will consist of 60 tuples.)
     1. `Ask ChatGPT to generate a SQL query **without giving any schema information**.`
-        
+
+  
         제시한 쿼리는 다음과 같음.
-        
+
+- 프롬프트 시작
+  
         > ****1. Creating Tables****
         Tables are the basic unit of data storage in an Oracle Database. Data is stored in rows and columns. You define a table with a table name, such as employees, and a set of columns. You give each column a column name, such as employee_id, last_name, and job_id; a datatype, such as VARCHAR2, DATE, or NUMBER; and a width. The width can be predetermined by the datatype, as in DATE. If columns are of the NUMBER datatype, define precision and scale instead of width. A row is a collection of column information corresponding to a single record.
         You can specify rules for each column of a table. These rules are called integrity constraints. One example is a NOT NULL integrity constraint. This constraint forces the column to contain a value in every row.
@@ -1388,23 +1404,25 @@
         > 
         > -> 다음의 문법을 바탕으로  List the last 25% of employees when ranking by salary. (Evaluation data will consist of 60 tuples.)의 결과를 출력하는 쿼리를 생각해봐 그리고 각각의 과정이 어떻게 이뤄지는지 확인해봐
         > 
+
+- 프롬프트 끝
+
+- 결과
         
-        결과
-        
-        ```sql
         SELECT *
         FROM (
           SELECT e.*, ROW_NUMBER() OVER (ORDER BY salary DESC) as salary_rank
           FROM employees e
         )
         WHERE salary_rank > (0.75 * 60); -- Calculate the position after which the last 25% begins
-        ```
         
 
 ---
 
-1. `Ask ChatGPT to generate a SQL query **with schema information**.`
-    
+2. `Ask ChatGPT to generate a SQL query **with schema information**.`
+
+- 프롬프트 시작
+      
     > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
     > 
     > 
@@ -1448,23 +1466,26 @@
     > 
     > → 자 이제 List the last 25% of employees when ranking by salary. (Evaluation data will consist of 60 tuples.)의 결과를 출력하는 쿼리를 작성해줘 
     > 
+
+- 프롬프트 끝
+
+  
+- 결과
     
-    결과
-    
-    ```sql
     SELECT ENAME, SAL
     FROM (
       SELECT ENAME, SAL, ROW_NUMBER() OVER (ORDER BY SAL) as SAL_RANK, COUNT(*) OVER () as TOTAL_COUNT
       FROM EMP
     ) WHERE SAL_RANK > (0.75 * TOTAL_COUNT)
     ORDER BY SAL;
-    ```
     
 
 ---
 
-1.  `Give **some additional information**(i.e., explanation of table schema, PK/FK relationship, clause you want to use etc.) to ChatGPT to make the SQL query more accurate.`
-    
+3.  `Give **some additional information**(i.e., explanation of table schema, PK/FK relationship, clause you want to use etc.) to ChatGPT to make the SQL query more accurate.`
+
+- 프롬프트 시작
+      
     > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
     > 
     > 
@@ -1518,18 +1539,19 @@
     > 
     > → 이걸 주의하면서 자 이제 List the last 25% of employees when ranking by salary. (Evaluation data will consist of 60 tuples.)의 결과를 출력하는 쿼리를 작성해줘  쿼리 결과만 주면 돼.
     > 
+
+- 프롬프트 끝
+  
+- 결과
     
-    결과
-    
-    ```sql
     SELECT ENAME, SAL
     FROM (
       SELECT ENAME, SAL, ROW_NUMBER() OVER (ORDER BY SAL DESC) AS rn, COUNT(*) OVER() AS total_count
       FROM EMP
     ) WHERE rn > (0.75 * total_count)
     ORDER BY SAL DESC;
-    ```
-    
+
+
     ***분석***
     
     <aside>
@@ -1549,7 +1571,9 @@
     1. `Ask ChatGPT to generate a SQL query **without giving any schema information**.`
         
         제시한 쿼리는 다음과 같음.
-        
+
+- 프롬프트 시작
+  
         > ****1. Creating Tables****
         Tables are the basic unit of data storage in an Oracle Database. Data is stored in rows and columns. You define a table with a table name, such as employees, and a set of columns. You give each column a column name, such as employee_id, last_name, and job_id; a datatype, such as VARCHAR2, DATE, or NUMBER; and a width. The width can be predetermined by the datatype, as in DATE. If columns are of the NUMBER datatype, define precision and scale instead of width. A row is a collection of column information corresponding to a single record.
         You can specify rules for each column of a table. These rules are called integrity constraints. One example is a NOT NULL integrity constraint. This constraint forces the column to contain a value in every row.
@@ -1789,10 +1813,12 @@
         > 
         > -> 다음의 문법을 바탕으로  Suppose we have only 4 departments(SALES, ACCOUNT, RESEARCH, OPERATION) in DEPT table. Show [1] the total salaries in the "SALES" and "ACCOUNT" deparments combined and [2] in the "RESEARCH" and "OPERATION" departments combined.의 결과를 출력하는 쿼리를 생각해봐 그리고 각각의 과정이 어떻게 이뤄지는지 확인해봐
         > 
+
+- 프롬프트 끝
+
+
+- 결과
         
-        결과
-        
-        ```sql
         SELECT 
           'SALES & ACCOUNT' AS Department_Group,
           SUM(SAL) AS Total_Salaries
@@ -1804,13 +1830,15 @@
           SUM(SAL) AS Total_Salaries
         FROM EMP
         WHERE DEPTNO IN (SELECT DEPTNO FROM DEPT WHERE DNAME IN ('RESEARCH', 'OPERATION'));
-        ```
         
 
 ---
 
-1. `Ask ChatGPT to generate a SQL query **with schema information**.`
-    
+2. `Ask ChatGPT to generate a SQL query **with schema information**.`
+
+- 프롬프트 시작
+
+
     > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
     > 
     > 
@@ -1854,10 +1882,12 @@
     > 
     > → 자 이제 Suppose we have only 4 departments(SALES, ACCOUNT, RESEARCH, OPERATION) in DEPT table. Show [1] the total salaries in the "SALES" and "ACCOUNT" deparments combined and [2] in the "RESEARCH" and "OPERATION" departments combined.의 결과를 출력하는 쿼리를 작성해줘.
     > 
-    
+
+- 프롬프트 끝
+
+  
     결과
     
-    ```sql
     SELECT 'SALES & ACCOUNT' AS Department_Group, SUM(SAL) AS Total_Salary
     FROM EMP
     JOIN DEPT ON EMP.DEPTNO = DEPT.DEPTNO
@@ -1867,13 +1897,15 @@
     FROM EMP
     JOIN DEPT ON EMP.DEPTNO = DEPT.DEPTNO
     WHERE DNAME IN ('RESEARCH', 'OPERATION');
-    ```
     
 
 ---
 
-1.  `Give **some additional information**(i.e., explanation of table schema, PK/FK relationship, clause you want to use etc.) to ChatGPT to make the SQL query more accurate.`
-    
+3.  `Give **some additional information**(i.e., explanation of table schema, PK/FK relationship, clause you want to use etc.) to ChatGPT to make the SQL query more accurate.`
+
+- 프롬프트 시작
+
+
     > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
     > 
     > 
@@ -1918,10 +1950,12 @@
     > 
     > → 이걸 주의하면서 자 이제 Suppose we have only 4 departments(SALES, ACCOUNT, RESEARCH, OPERATION) in DEPT table. Show [1] the total salaries in the "SALES" and "ACCOUNT" deparments combined and [2] in the "RESEARCH" and "OPERATION" departments combined.의 결과를 출력하는 쿼리를 작성해줘  쿼리 결과만 주면 돼.
     > 
+
+
+- 프롬프트 끝
+  
+- 결과
     
-    결과
-    
-    ```sql
     SELECT 'SALES & ACCOUNT' AS Department_Group, SUM(SAL) AS Total_Salary
     FROM EMP E
     JOIN DEPT D ON E.DEPTNO = D.DEPTNO
@@ -1931,7 +1965,6 @@
     FROM EMP E
     JOIN DEPT D ON E.DEPTNO = D.DEPTNO
     WHERE DNAME IN ('RESEARCH', 'OPERATION');
-    ```
     
     ***분석***
     
@@ -1952,7 +1985,9 @@
     1. `Ask ChatGPT to generate a SQL query **without giving any schema information**.`
         
         제시한 쿼리는 다음과 같음.
-        
+
+- 프롬프트 시작
+      
         > ****1. Creating Tables****
         Tables are the basic unit of data storage in an Oracle Database. Data is stored in rows and columns. You define a table with a table name, such as employees, and a set of columns. You give each column a column name, such as employee_id, last_name, and job_id; a datatype, such as VARCHAR2, DATE, or NUMBER; and a width. The width can be predetermined by the datatype, as in DATE. If columns are of the NUMBER datatype, define precision and scale instead of width. A row is a collection of column information corresponding to a single record.
         You can specify rules for each column of a table. These rules are called integrity constraints. One example is a NOT NULL integrity constraint. This constraint forces the column to contain a value in every row.
@@ -2191,11 +2226,11 @@
         > 
         > 
         > -> 다음의 문법을 바탕으로  Show [1] the order date, [2] the number of orders for that date, [3] the number of books ordered, [4] the total price of the orders, [5] the running total of books for the month, [6] the number of books from the same day last week, and [7] all of these totals (from [1] to [6]) should also show for each month and overall의 결과를 출력하는 쿼리를 생각해봐 그리고 각각의 과정이 어떻게 이뤄지는지 확인해봐
-        > 
+        >
+- 프롬프트 끝
         
-        결과
+- 결과
         
-        ```sql
         SELECT 
           order_date, 
           COUNT(order_id) AS num_orders, 
@@ -2209,13 +2244,14 @@
           order_date
         ORDER BY 
           order_date;
-        ```
         
 
 ---
 
-1. `Ask ChatGPT to generate a SQL query **with schema information**.`
-    
+2. `Ask ChatGPT to generate a SQL query **with schema information**.`
+
+- 프롬프트 시작
+  
     > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
     > 
     > 
@@ -2360,10 +2396,12 @@
     > 
     > → 자 이제 Show [1] the order date, [2] the number of orders for that date, [3] the number of books ordered, [4] the total price of the orders, [5] the running total of books for the month, [6] the number of books from the same day last week, and [7] all of these totals (from [1] to [6]) should also show for each month and overall의 결과를 출력하는 쿼리를 작성해줘.
     > 
-    
-    결과
-    
-    ```sql
+
+- 프롬프트 끝
+
+  
+- 결과
+
     WITH OrderDetails AS (
       SELECT 
         o.order_id, 
@@ -2404,13 +2442,14 @@
       BookTotals
     ORDER BY 
       order_date;
-    ```
     
 
 ---
 
-1.  `Give **some additional information**(i.e., explanation of table schema, PK/FK relationship, clause you want to use etc.) to ChatGPT to make the SQL query more accurate.`
-    
+3.  `Give **some additional information**(i.e., explanation of table schema, PK/FK relationship, clause you want to use etc.) to ChatGPT to make the SQL query more accurate.`
+
+- 프롬프트 시작
+  
     > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
     > 
     > 
@@ -2467,10 +2506,11 @@
     > 
     > → 이걸 주의하면서 Show [1] the order date, [2] the number of orders for that date, [3] the number of books ordered, [4] the total price of the orders, [5] the running total of books for the month, [6] the number of books from the same day last week, and [7] all of these totals (from [1] to [6]) should also show for each month and overall의 결과를 출력하는 쿼리를 작성해줘. 쿼리 결과만 주면 돼. 특히 오류가 나지 않도록 조심해!
     > 
+
+- 프롬프트 끝
+  
+- 결과
     
-    결과
-    
-    ```sql
     SELECT COALESCE(TO_CHAR(order_date, 'YYYY-MM'), 'Total') AS Order_Month,
            order_date,
            COUNT(DISTINCT order_id) AS Number_of_Orders,
@@ -2488,7 +2528,6 @@
           GROUP BY o.order_date, o.order_id) 
     GROUP BY ROLLUP (TO_CHAR(order_date, 'YYYY-MM'), order_date)
     ORDER BY Order_Month DESC, order_date DESC;
-    ```
     
     ***분석***
     
