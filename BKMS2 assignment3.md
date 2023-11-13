@@ -275,147 +275,149 @@
 2. `Ask ChatGPT to generate a SQL query **with schema information**.`
 
 - 프롬프트 시작
-    > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
-    > 
-    > 
-    > create table classroom
-    > (building		varchar(15),
-    > room_number		varchar(7),
-    > capacity		numeric(4,0),
-    > primary key (building, room_number)
-    > );
-    > 
-    > create table department
-    > (dept_name		varchar(20),
-    > building		varchar(15),
-    > budget		        numeric(12,2) check (budget > 0),
-    > primary key (dept_name)
-    > );
-    > 
-    > create table course
-    > (course_id		varchar(8),
-    > title			varchar(50),
-    > dept_name		varchar(20),
-    > credits		numeric(2,0) check (credits > 0),
-    > primary key (course_id),
-    > foreign key (dept_name) references department (dept_name)
-    > on delete set null
-    > );
-    > 
-    > create table instructor
-    > (ID			varchar(5),
-    > name			varchar(20) not null,
-    > dept_name		varchar(20),
-    > salary			numeric(8,2) check (salary > 29000),
-    > primary key (ID),
-    > foreign key (dept_name) references department (dept_name)
-    > on delete set null
-    > );
-    > 
-    > create table section
-    > (course_id		varchar(8),
-    > sec_id			varchar(8),
-    > semester		varchar(6)
-    > check (semester in ('Fall', 'Winter', 'Spring', 'Summer')),
-    > year			numeric(4,0) check (year > 1701 and year < 2100),
-    > building		varchar(15),
-    > room_number		varchar(7),
-    > time_slot_id		varchar(4),
-    > primary key (course_id, sec_id, semester, year),
-    > foreign key (course_id) references course (course_id)
-    > on delete cascade,
-    > foreign key (building, room_number) references classroom (building, room_number)
-    > on delete set null
-    > );
-    > 
-    > create table teaches
-    > (ID			varchar(5),
-    > course_id		varchar(8),
-    > sec_id			varchar(8),
-    > semester		varchar(6),
-    > year			numeric(4,0),
-    > primary key (ID, course_id, sec_id, semester, year),
-    > foreign key (course_id, sec_id, semester, year) references section (course_id, sec_id, semester, year)
-    > on delete cascade,
-    > foreign key (ID) references instructor (ID)
-    > on delete cascade
-    > );
-    > 
-    > create table student
-    > (ID			varchar(5),
-    > name			varchar(20) not null,
-    > dept_name		varchar(20),
-    > tot_cred		numeric(3,0) check (tot_cred >= 0),
-    > primary key (ID),
-    > foreign key (dept_name) references department (dept_name)
-    > on delete set null
-    > );
-    > 
-    > create table takes
-    > (ID			varchar(5),
-    > course_id		varchar(8),
-    > sec_id			varchar(8),
-    > semester		varchar(6),
-    > year			numeric(4,0),
-    > grade		        varchar(2),
-    > primary key (ID, course_id, sec_id, semester, year),
-    > foreign key (course_id, sec_id, semester, year) references section (course_id, sec_id, semester, year)
-    > on delete cascade,
-    > foreign key (ID) references student (ID)
-    > on delete cascade
-    > );
-    > 
-    > create table advisor
-    > (s_ID			varchar(5),
-    > i_ID			varchar(5),
-    > primary key (s_ID),
-    > foreign key (i_ID) references instructor (ID)
-    > on delete set null,
-    > foreign key (s_ID) references student (ID)
-    > on delete cascade
-    > );
-    > 
-    > create table time_slot
-    > (time_slot_id		varchar(4),
-    > day			varchar(1),
-    > start_hr		numeric(2) check (start_hr >= 0 and start_hr < 24),
-    > start_min		numeric(2) check (start_min >= 0 and start_min < 60),
-    > end_hr			numeric(2) check (end_hr >= 0 and end_hr < 24),
-    > end_min		numeric(2) check (end_min >= 0 and end_min < 60),
-    > primary key (time_slot_id, day, start_hr, start_min)
-    > );
-    > 
-    > create table prereq
-    > (course_id		varchar(8),
-    > prereq_id		varchar(8),
-    > primary key (course_id, prereq_id),
-    > foreign key (course_id) references course (course_id)
-    > on delete cascade,
-    > foreign key (prereq_id) references course (course_id)
-    > ); 
-    > 
-    > step-by-step의 생각 과정은 다음과 같아. 
-    > 
-    > 1. **목적 파악:** 우선 "가장 높은 평균 급여를 가진 부서 찾기"라는 문제의 해결 목적을 명확히 합니다. 이 경우에는 '부서별 평균 급여 계산'이라는 중간 목표를 가지고 '가장 높은 급여를 제공하는 부서'를 최종적으로 찾아야 합니다.
-    > 2. **데이터 선택:** 관련 데이터를 포함하고 있는 테이블과 필요한 열(컬럼)을 식별합니다. 
-    > 3. **집계 함수 사용:** 평균 급여를 계산하기 위해 SQL의 집계 함수 **`AVG`**를 사용합니다. **`AVG(salary)`** 함수는 각 부서의 평균 급여를 계산합니다.
-    > 4. **그룹화:** **`GROUP BY`** 절을 사용하여 부서별로 결과를 그룹화하고, 각 부서의 평균 급여를 계산합니다. 이러한 그룹화는 집계 함수가 적용되는 범위를 부서별로 한정짓습니다.
-    > 5. **결과 정렬:** 계산된 평균 급여를 기준으로 결과를 정렬하기 위해 **`ORDER BY`** 절을 사용합니다. 평균 급여가 가장 높은 부서를 찾기 위해 평균 급여를 내림차순으로 정렬합니다(**`DESC`**).
-    > 6. **상위 결과 제한:** **`FETCH FIRST 1 ROW ONLY`** (또는 일부 SQL 방언에서는 **`LIMIT 1`**)를 사용하여 결과 집합의 첫 번째 행만 가져오도록 제한합니다. 이렇게 하면 가장 높은 평균 급여를 가진 단일 부서만 결과로 반환됩니다.
-    > 
-    > → 자 이제  "Find the department that has the highest average salary" 문제를 해결하는 SQL 쿼리를 생성해줘
-    > 
+
+  
+        > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
+        > 
+        > 
+        > create table classroom
+        > (building		varchar(15),
+        > room_number		varchar(7),
+        > capacity		numeric(4,0),
+        > primary key (building, room_number)
+        > );
+        > 
+        > create table department
+        > (dept_name		varchar(20),
+        > building		varchar(15),
+        > budget		        numeric(12,2) check (budget > 0),
+        > primary key (dept_name)
+        > );
+        > 
+        > create table course
+        > (course_id		varchar(8),
+        > title			varchar(50),
+        > dept_name		varchar(20),
+        > credits		numeric(2,0) check (credits > 0),
+        > primary key (course_id),
+        > foreign key (dept_name) references department (dept_name)
+        > on delete set null
+        > );
+        > 
+        > create table instructor
+        > (ID			varchar(5),
+        > name			varchar(20) not null,
+        > dept_name		varchar(20),
+        > salary			numeric(8,2) check (salary > 29000),
+        > primary key (ID),
+        > foreign key (dept_name) references department (dept_name)
+        > on delete set null
+        > );
+        > 
+        > create table section
+        > (course_id		varchar(8),
+        > sec_id			varchar(8),
+        > semester		varchar(6)
+        > check (semester in ('Fall', 'Winter', 'Spring', 'Summer')),
+        > year			numeric(4,0) check (year > 1701 and year < 2100),
+        > building		varchar(15),
+        > room_number		varchar(7),
+        > time_slot_id		varchar(4),
+        > primary key (course_id, sec_id, semester, year),
+        > foreign key (course_id) references course (course_id)
+        > on delete cascade,
+        > foreign key (building, room_number) references classroom (building, room_number)
+        > on delete set null
+        > );
+        > 
+        > create table teaches
+        > (ID			varchar(5),
+        > course_id		varchar(8),
+        > sec_id			varchar(8),
+        > semester		varchar(6),
+        > year			numeric(4,0),
+        > primary key (ID, course_id, sec_id, semester, year),
+        > foreign key (course_id, sec_id, semester, year) references section (course_id, sec_id, semester, year)
+        > on delete cascade,
+        > foreign key (ID) references instructor (ID)
+        > on delete cascade
+        > );
+        > 
+        > create table student
+        > (ID			varchar(5),
+        > name			varchar(20) not null,
+        > dept_name		varchar(20),
+        > tot_cred		numeric(3,0) check (tot_cred >= 0),
+        > primary key (ID),
+        > foreign key (dept_name) references department (dept_name)
+        > on delete set null
+        > );
+        > 
+        > create table takes
+        > (ID			varchar(5),
+        > course_id		varchar(8),
+        > sec_id			varchar(8),
+        > semester		varchar(6),
+        > year			numeric(4,0),
+        > grade		        varchar(2),
+        > primary key (ID, course_id, sec_id, semester, year),
+        > foreign key (course_id, sec_id, semester, year) references section (course_id, sec_id, semester, year)
+        > on delete cascade,
+        > foreign key (ID) references student (ID)
+        > on delete cascade
+        > );
+        > 
+        > create table advisor
+        > (s_ID			varchar(5),
+        > i_ID			varchar(5),
+        > primary key (s_ID),
+        > foreign key (i_ID) references instructor (ID)
+        > on delete set null,
+        > foreign key (s_ID) references student (ID)
+        > on delete cascade
+        > );
+        > 
+        > create table time_slot
+        > (time_slot_id		varchar(4),
+        > day			varchar(1),
+        > start_hr		numeric(2) check (start_hr >= 0 and start_hr < 24),
+        > start_min		numeric(2) check (start_min >= 0 and start_min < 60),
+        > end_hr			numeric(2) check (end_hr >= 0 and end_hr < 24),
+        > end_min		numeric(2) check (end_min >= 0 and end_min < 60),
+        > primary key (time_slot_id, day, start_hr, start_min)
+        > );
+        > 
+        > create table prereq
+        > (course_id		varchar(8),
+        > prereq_id		varchar(8),
+        > primary key (course_id, prereq_id),
+        > foreign key (course_id) references course (course_id)
+        > on delete cascade,
+        > foreign key (prereq_id) references course (course_id)
+        > ); 
+        > 
+        > step-by-step의 생각 과정은 다음과 같아. 
+        > 
+        > 1. **목적 파악:** 우선 "가장 높은 평균 급여를 가진 부서 찾기"라는 문제의 해결 목적을 명확히 합니다. 이 경우에는 '부서별 평균 급여 계산'이라는 중간 목표를 가지고 '가장 높은 급여를 제공하는 부서'를 최종적으로 찾아야 합니다.
+        > 2. **데이터 선택:** 관련 데이터를 포함하고 있는 테이블과 필요한 열(컬럼)을 식별합니다. 
+        > 3. **집계 함수 사용:** 평균 급여를 계산하기 위해 SQL의 집계 함수 **`AVG`**를 사용합니다. **`AVG(salary)`** 함수는 각 부서의 평균 급여를 계산합니다.
+        > 4. **그룹화:** **`GROUP BY`** 절을 사용하여 부서별로 결과를 그룹화하고, 각 부서의 평균 급여를 계산합니다. 이러한 그룹화는 집계 함수가 적용되는 범위를 부서별로 한정짓습니다.
+        > 5. **결과 정렬:** 계산된 평균 급여를 기준으로 결과를 정렬하기 위해 **`ORDER BY`** 절을 사용합니다. 평균 급여가 가장 높은 부서를 찾기 위해 평균 급여를 내림차순으로 정렬합니다(**`DESC`**).
+        > 6. **상위 결과 제한:** **`FETCH FIRST 1 ROW ONLY`** (또는 일부 SQL 방언에서는 **`LIMIT 1`**)를 사용하여 결과 집합의 첫 번째 행만 가져오도록 제한합니다. 이렇게 하면 가장 높은 평균 급여를 가진 단일 부서만 결과로 반환됩니다.
+        > 
+        > → 자 이제  "Find the department that has the highest average salary" 문제를 해결하는 SQL 쿼리를 생성해줘
+        > 
 
 - 프롬프트 종료
 
 - 결과
     
-    SELECT d.dept_name, AVG(i.salary) as avg_salary
-    FROM instructor i
-    JOIN department d ON i.dept_name = d.dept_name
-    GROUP BY d.dept_name
-    ORDER BY avg_salary DESC
-    FETCH FIRST ROW ONLY;
+        SELECT d.dept_name, AVG(i.salary) as avg_salary
+        FROM instructor i
+        JOIN department d ON i.dept_name = d.dept_name
+        GROUP BY d.dept_name
+        ORDER BY avg_salary DESC
+        FETCH FIRST ROW ONLY;
     
 
 ---
@@ -424,150 +426,150 @@
 
 - 프롬프트 시작
 
-    > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
-    > 
-    > 
-    > create table classroom
-    > (building		varchar(15),
-    > room_number		varchar(7),
-    > capacity		numeric(4,0),
-    > primary key (building, room_number)
-    > );
-    > 
-    > create table department
-    > (dept_name		varchar(20),
-    > building		varchar(15),
-    > budget		        numeric(12,2) check (budget > 0),
-    > primary key (dept_name)
-    > );
-    > 
-    > create table course
-    > (course_id		varchar(8),
-    > title			varchar(50),
-    > dept_name		varchar(20),
-    > credits		numeric(2,0) check (credits > 0),
-    > primary key (course_id),
-    > foreign key (dept_name) references department (dept_name)
-    > on delete set null
-    > );
-    > 
-    > create table instructor
-    > (ID			varchar(5),
-    > name			varchar(20) not null,
-    > dept_name		varchar(20),
-    > salary			numeric(8,2) check (salary > 29000),
-    > primary key (ID),
-    > foreign key (dept_name) references department (dept_name)
-    > on delete set null
-    > );
-    > 
-    > create table section
-    > (course_id		varchar(8),
-    > sec_id			varchar(8),
-    > semester		varchar(6)
-    > check (semester in ('Fall', 'Winter', 'Spring', 'Summer')),
-    > year			numeric(4,0) check (year > 1701 and year < 2100),
-    > building		varchar(15),
-    > room_number		varchar(7),
-    > time_slot_id		varchar(4),
-    > primary key (course_id, sec_id, semester, year),
-    > foreign key (course_id) references course (course_id)
-    > on delete cascade,
-    > foreign key (building, room_number) references classroom (building, room_number)
-    > on delete set null
-    > );
-    > 
-    > create table teaches
-    > (ID			varchar(5),
-    > course_id		varchar(8),
-    > sec_id			varchar(8),
-    > semester		varchar(6),
-    > year			numeric(4,0),
-    > primary key (ID, course_id, sec_id, semester, year),
-    > foreign key (course_id, sec_id, semester, year) references section (course_id, sec_id, semester, year)
-    > on delete cascade,
-    > foreign key (ID) references instructor (ID)
-    > on delete cascade
-    > );
-    > 
-    > create table student
-    > (ID			varchar(5),
-    > name			varchar(20) not null,
-    > dept_name		varchar(20),
-    > tot_cred		numeric(3,0) check (tot_cred >= 0),
-    > primary key (ID),
-    > foreign key (dept_name) references department (dept_name)
-    > on delete set null
-    > );
-    > 
-    > create table takes
-    > (ID			varchar(5),
-    > course_id		varchar(8),
-    > sec_id			varchar(8),
-    > semester		varchar(6),
-    > year			numeric(4,0),
-    > grade		        varchar(2),
-    > primary key (ID, course_id, sec_id, semester, year),
-    > foreign key (course_id, sec_id, semester, year) references section (course_id, sec_id, semester, year)
-    > on delete cascade,
-    > foreign key (ID) references student (ID)
-    > on delete cascade
-    > );
-    > 
-    > create table advisor
-    > (s_ID			varchar(5),
-    > i_ID			varchar(5),
-    > primary key (s_ID),
-    > foreign key (i_ID) references instructor (ID)
-    > on delete set null,
-    > foreign key (s_ID) references student (ID)
-    > on delete cascade
-    > );
-    > 
-    > create table time_slot
-    > (time_slot_id		varchar(4),
-    > day			varchar(1),
-    > start_hr		numeric(2) check (start_hr >= 0 and start_hr < 24),
-    > start_min		numeric(2) check (start_min >= 0 and start_min < 60),
-    > end_hr			numeric(2) check (end_hr >= 0 and end_hr < 24),
-    > end_min		numeric(2) check (end_min >= 0 and end_min < 60),
-    > primary key (time_slot_id, day, start_hr, start_min)
-    > );
-    > 
-    > create table prereq
-    > (course_id		varchar(8),
-    > prereq_id		varchar(8),
-    > primary key (course_id, prereq_id),
-    > foreign key (course_id) references course (course_id)
-    > on delete cascade,
-    > foreign key (prereq_id) references course (course_id)
-    > ); 
-    > 
-    > step-by-step의 생각 과정은 다음과 같아. 
-    > 
-    > 1. **목적 파악:** 우선 "가장 높은 평균 급여를 가진 부서 찾기"라는 문제의 해결 목적을 명확히 합니다. 이 경우에는 '부서별 평균 급여 계산'이라는 중간 목표를 가지고 '가장 높은 급여를 제공하는 부서'를 최종적으로 찾아야 합니다.
-    > 2. **데이터 선택:** 관련 데이터를 포함하고 있는 테이블과 필요한 열(컬럼)을 식별합니다. 
-    > 3. **집계 함수 사용:** 평균 급여를 계산하기 위해 SQL의 집계 함수 **`AVG`**를 사용합니다. **`AVG(salary)`** 함수는 각 부서의 평균 급여를 계산합니다.
-    > 4. **그룹화:** **`GROUP BY`** 절을 사용하여 부서별로 결과를 그룹화하고, 각 부서의 평균 급여를 계산합니다. 이러한 그룹화는 집계 함수가 적용되는 범위를 부서별로 한정짓습니다.
-    > 5. **결과 정렬:** 계산된 평균 급여를 기준으로 결과를 정렬하기 위해 **`ORDER BY`** 절을 사용합니다. 평균 급여가 가장 높은 부서를 찾기 위해 평균 급여를 내림차순으로 정렬합니다(**`DESC`**).
-    > 6. **상위 결과 제한:** **`FETCH FIRST 1 ROW ONLY`** (또는 일부 SQL 방언에서는 **`LIMIT 1`**)를 사용하여 결과 집합의 첫 번째 행만 가져오도록 제한합니다. 이렇게 하면 가장 높은 평균 급여를 가진 단일 부서만 결과로 반환됩니다.
-    > 
-    > → 자 이제  "Find the department that has the highest average salary" 문제를 해결하는 SQL 쿼리를 생성해줘
-    > 
+        > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
+        > 
+        > 
+        > create table classroom
+        > (building		varchar(15),
+        > room_number		varchar(7),
+        > capacity		numeric(4,0),
+        > primary key (building, room_number)
+        > );
+        > 
+        > create table department
+        > (dept_name		varchar(20),
+        > building		varchar(15),
+        > budget		        numeric(12,2) check (budget > 0),
+        > primary key (dept_name)
+        > );
+        > 
+        > create table course
+        > (course_id		varchar(8),
+        > title			varchar(50),
+        > dept_name		varchar(20),
+        > credits		numeric(2,0) check (credits > 0),
+        > primary key (course_id),
+        > foreign key (dept_name) references department (dept_name)
+        > on delete set null
+        > );
+        > 
+        > create table instructor
+        > (ID			varchar(5),
+        > name			varchar(20) not null,
+        > dept_name		varchar(20),
+        > salary			numeric(8,2) check (salary > 29000),
+        > primary key (ID),
+        > foreign key (dept_name) references department (dept_name)
+        > on delete set null
+        > );
+        > 
+        > create table section
+        > (course_id		varchar(8),
+        > sec_id			varchar(8),
+        > semester		varchar(6)
+        > check (semester in ('Fall', 'Winter', 'Spring', 'Summer')),
+        > year			numeric(4,0) check (year > 1701 and year < 2100),
+        > building		varchar(15),
+        > room_number		varchar(7),
+        > time_slot_id		varchar(4),
+        > primary key (course_id, sec_id, semester, year),
+        > foreign key (course_id) references course (course_id)
+        > on delete cascade,
+        > foreign key (building, room_number) references classroom (building, room_number)
+        > on delete set null
+        > );
+        > 
+        > create table teaches
+        > (ID			varchar(5),
+        > course_id		varchar(8),
+        > sec_id			varchar(8),
+        > semester		varchar(6),
+        > year			numeric(4,0),
+        > primary key (ID, course_id, sec_id, semester, year),
+        > foreign key (course_id, sec_id, semester, year) references section (course_id, sec_id, semester, year)
+        > on delete cascade,
+        > foreign key (ID) references instructor (ID)
+        > on delete cascade
+        > );
+        > 
+        > create table student
+        > (ID			varchar(5),
+        > name			varchar(20) not null,
+        > dept_name		varchar(20),
+        > tot_cred		numeric(3,0) check (tot_cred >= 0),
+        > primary key (ID),
+        > foreign key (dept_name) references department (dept_name)
+        > on delete set null
+        > );
+        > 
+        > create table takes
+        > (ID			varchar(5),
+        > course_id		varchar(8),
+        > sec_id			varchar(8),
+        > semester		varchar(6),
+        > year			numeric(4,0),
+        > grade		        varchar(2),
+        > primary key (ID, course_id, sec_id, semester, year),
+        > foreign key (course_id, sec_id, semester, year) references section (course_id, sec_id, semester, year)
+        > on delete cascade,
+        > foreign key (ID) references student (ID)
+        > on delete cascade
+        > );
+        > 
+        > create table advisor
+        > (s_ID			varchar(5),
+        > i_ID			varchar(5),
+        > primary key (s_ID),
+        > foreign key (i_ID) references instructor (ID)
+        > on delete set null,
+        > foreign key (s_ID) references student (ID)
+        > on delete cascade
+        > );
+        > 
+        > create table time_slot
+        > (time_slot_id		varchar(4),
+        > day			varchar(1),
+        > start_hr		numeric(2) check (start_hr >= 0 and start_hr < 24),
+        > start_min		numeric(2) check (start_min >= 0 and start_min < 60),
+        > end_hr			numeric(2) check (end_hr >= 0 and end_hr < 24),
+        > end_min		numeric(2) check (end_min >= 0 and end_min < 60),
+        > primary key (time_slot_id, day, start_hr, start_min)
+        > );
+        > 
+        > create table prereq
+        > (course_id		varchar(8),
+        > prereq_id		varchar(8),
+        > primary key (course_id, prereq_id),
+        > foreign key (course_id) references course (course_id)
+        > on delete cascade,
+        > foreign key (prereq_id) references course (course_id)
+        > ); 
+        > 
+        > step-by-step의 생각 과정은 다음과 같아. 
+        > 
+        > 1. **목적 파악:** 우선 "가장 높은 평균 급여를 가진 부서 찾기"라는 문제의 해결 목적을 명확히 합니다. 이 경우에는 '부서별 평균 급여 계산'이라는 중간 목표를 가지고 '가장 높은 급여를 제공하는 부서'를 최종적으로 찾아야 합니다.
+        > 2. **데이터 선택:** 관련 데이터를 포함하고 있는 테이블과 필요한 열(컬럼)을 식별합니다. 
+        > 3. **집계 함수 사용:** 평균 급여를 계산하기 위해 SQL의 집계 함수 **`AVG`**를 사용합니다. **`AVG(salary)`** 함수는 각 부서의 평균 급여를 계산합니다.
+        > 4. **그룹화:** **`GROUP BY`** 절을 사용하여 부서별로 결과를 그룹화하고, 각 부서의 평균 급여를 계산합니다. 이러한 그룹화는 집계 함수가 적용되는 범위를 부서별로 한정짓습니다.
+        > 5. **결과 정렬:** 계산된 평균 급여를 기준으로 결과를 정렬하기 위해 **`ORDER BY`** 절을 사용합니다. 평균 급여가 가장 높은 부서를 찾기 위해 평균 급여를 내림차순으로 정렬합니다(**`DESC`**).
+        > 6. **상위 결과 제한:** **`FETCH FIRST 1 ROW ONLY`** (또는 일부 SQL 방언에서는 **`LIMIT 1`**)를 사용하여 결과 집합의 첫 번째 행만 가져오도록 제한합니다. 이렇게 하면 가장 높은 평균 급여를 가진 단일 부서만 결과로 반환됩니다.
+        > 
+        > → 자 이제  "Find the department that has the highest average salary" 문제를 해결하는 SQL 쿼리를 생성해줘
+        > 
 
 - 프롬프트 끝
 
   
 - 결과
     
-    -- Step 1: Calculate the average salary for each department
-    SELECT dept_name, AVG(salary) AS avg_salary
-    FROM instructor
-    GROUP BY dept_name
-    
-    -- Step 2: Order the results by the average salary in descending order and limit to the top result
-    ORDER BY avg_salary DESC
-    FETCH FIRST 1 ROW ONLY;
+        -- Step 1: Calculate the average salary for each department
+        SELECT dept_name, AVG(salary) AS avg_salary
+        FROM instructor
+        GROUP BY dept_name
+        
+        -- Step 2: Order the results by the average salary in descending order and limit to the top result
+        ORDER BY avg_salary DESC
+        FETCH FIRST 1 ROW ONLY;
 
 
     
@@ -579,6 +581,10 @@
     1. **평균 급여 계산**: 각 부서별로 'instructor' 테이블의 급여 평균을 'dept_name'으로 그룹화하여 계산합니다.
     2. **결과 정렬 및 제한**: 계산된 평균 급여를 기준으로 내림차순으로 정렬하고, 상위 결과 하나만 가져옵니다.
     </aside>
+
+
+
+
     
 
 ### 두 번째 문제
@@ -846,303 +852,303 @@
 
 - 프롬프트 시작
   
-    > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
-    > 
-    > 
-    > create table classroom
-    > (building		varchar(15),
-    > room_number		varchar(7),
-    > capacity		numeric(4,0),
-    > primary key (building, room_number)
-    > );
-    > 
-    > create table department
-    > (dept_name		varchar(20),
-    > building		varchar(15),
-    > budget		        numeric(12,2) check (budget > 0),
-    > primary key (dept_name)
-    > );
-    > 
-    > create table course
-    > (course_id		varchar(8),
-    > title			varchar(50),
-    > dept_name		varchar(20),
-    > credits		numeric(2,0) check (credits > 0),
-    > primary key (course_id),
-    > foreign key (dept_name) references department (dept_name)
-    > on delete set null
-    > );
-    > 
-    > create table instructor
-    > (ID			varchar(5),
-    > name			varchar(20) not null,
-    > dept_name		varchar(20),
-    > salary			numeric(8,2) check (salary > 29000),
-    > primary key (ID),
-    > foreign key (dept_name) references department (dept_name)
-    > on delete set null
-    > );
-    > 
-    > create table section
-    > (course_id		varchar(8),
-    > sec_id			varchar(8),
-    > semester		varchar(6)
-    > check (semester in ('Fall', 'Winter', 'Spring', 'Summer')),
-    > year			numeric(4,0) check (year > 1701 and year < 2100),
-    > building		varchar(15),
-    > room_number		varchar(7),
-    > time_slot_id		varchar(4),
-    > primary key (course_id, sec_id, semester, year),
-    > foreign key (course_id) references course (course_id)
-    > on delete cascade,
-    > foreign key (building, room_number) references classroom (building, room_number)
-    > on delete set null
-    > );
-    > 
-    > create table teaches
-    > (ID			varchar(5),
-    > course_id		varchar(8),
-    > sec_id			varchar(8),
-    > semester		varchar(6),
-    > year			numeric(4,0),
-    > primary key (ID, course_id, sec_id, semester, year),
-    > foreign key (course_id, sec_id, semester, year) references section (course_id, sec_id, semester, year)
-    > on delete cascade,
-    > foreign key (ID) references instructor (ID)
-    > on delete cascade
-    > );
-    > 
-    > create table student
-    > (ID			varchar(5),
-    > name			varchar(20) not null,
-    > dept_name		varchar(20),
-    > tot_cred		numeric(3,0) check (tot_cred >= 0),
-    > primary key (ID),
-    > foreign key (dept_name) references department (dept_name)
-    > on delete set null
-    > );
-    > 
-    > create table takes
-    > (ID			varchar(5),
-    > course_id		varchar(8),
-    > sec_id			varchar(8),
-    > semester		varchar(6),
-    > year			numeric(4,0),
-    > grade		        varchar(2),
-    > primary key (ID, course_id, sec_id, semester, year),
-    > foreign key (course_id, sec_id, semester, year) references section (course_id, sec_id, semester, year)
-    > on delete cascade,
-    > foreign key (ID) references student (ID)
-    > on delete cascade
-    > );
-    > 
-    > create table advisor
-    > (s_ID			varchar(5),
-    > i_ID			varchar(5),
-    > primary key (s_ID),
-    > foreign key (i_ID) references instructor (ID)
-    > on delete set null,
-    > foreign key (s_ID) references student (ID)
-    > on delete cascade
-    > );
-    > 
-    > create table time_slot
-    > (time_slot_id		varchar(4),
-    > day			varchar(1),
-    > start_hr		numeric(2) check (start_hr >= 0 and start_hr < 24),
-    > start_min		numeric(2) check (start_min >= 0 and start_min < 60),
-    > end_hr			numeric(2) check (end_hr >= 0 and end_hr < 24),
-    > end_min		numeric(2) check (end_min >= 0 and end_min < 60),
-    > primary key (time_slot_id, day, start_hr, start_min)
-    > );
-    > 
-    > create table prereq
-    > (course_id		varchar(8),
-    > prereq_id		varchar(8),
-    > primary key (course_id, prereq_id),
-    > foreign key (course_id) references course (course_id)
-    > on delete cascade,
-    > foreign key (prereq_id) references course (course_id)
-    > ); 
-    > 
-    > 너가 쿼리를 짜기위해 step-by-step으로 생각할 과정은 다음과 같아.
-    > 
-    > 1. **목적 파악:** 평균 총 학점을 모든 과거 연도에 대해 계산해야 합니다. 이는 "prior years"라는 표현을 고려할 때 현재 연도를 제외하고 계산해야 한다는 것을 의미합니다.
-    > 2. **데이터 선택:** 관련 데이터가 어느 열에 있는지 어떤 데이터를 선택해야 하는지 확인해.
-    > 3. **시간 제한 설정:** 관련된 테이블을 참조하여 과거 연도의 데이터를 필터링해야 합니다. ' 수강한 과목의 연도 정보를 포함하고 있는 테이블을 참조해야 해.
-    > 4. **집계 함수 사용:** 'tot_cred'의 총 합을 계산한 후, 학생 수로 나누어 평균을 구합니다. 이를 위해 SQL의 **`SUM`**과 **`COUNT`** 집계 함수를 사용해.
-    > 5. **쿼리 작성:** 모든 학생의 'tot_cred' 값을 합산하고, 그 수로 나누어 평균 총 학점을 구합니다.
-    > 
-    > → 자 이제 Find the average total credits over all prior years. 의 결과를 출력하는 쿼리를 작성해줘
-    > 
+        > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
+        > 
+        > 
+        > create table classroom
+        > (building		varchar(15),
+        > room_number		varchar(7),
+        > capacity		numeric(4,0),
+        > primary key (building, room_number)
+        > );
+        > 
+        > create table department
+        > (dept_name		varchar(20),
+        > building		varchar(15),
+        > budget		        numeric(12,2) check (budget > 0),
+        > primary key (dept_name)
+        > );
+        > 
+        > create table course
+        > (course_id		varchar(8),
+        > title			varchar(50),
+        > dept_name		varchar(20),
+        > credits		numeric(2,0) check (credits > 0),
+        > primary key (course_id),
+        > foreign key (dept_name) references department (dept_name)
+        > on delete set null
+        > );
+        > 
+        > create table instructor
+        > (ID			varchar(5),
+        > name			varchar(20) not null,
+        > dept_name		varchar(20),
+        > salary			numeric(8,2) check (salary > 29000),
+        > primary key (ID),
+        > foreign key (dept_name) references department (dept_name)
+        > on delete set null
+        > );
+        > 
+        > create table section
+        > (course_id		varchar(8),
+        > sec_id			varchar(8),
+        > semester		varchar(6)
+        > check (semester in ('Fall', 'Winter', 'Spring', 'Summer')),
+        > year			numeric(4,0) check (year > 1701 and year < 2100),
+        > building		varchar(15),
+        > room_number		varchar(7),
+        > time_slot_id		varchar(4),
+        > primary key (course_id, sec_id, semester, year),
+        > foreign key (course_id) references course (course_id)
+        > on delete cascade,
+        > foreign key (building, room_number) references classroom (building, room_number)
+        > on delete set null
+        > );
+        > 
+        > create table teaches
+        > (ID			varchar(5),
+        > course_id		varchar(8),
+        > sec_id			varchar(8),
+        > semester		varchar(6),
+        > year			numeric(4,0),
+        > primary key (ID, course_id, sec_id, semester, year),
+        > foreign key (course_id, sec_id, semester, year) references section (course_id, sec_id, semester, year)
+        > on delete cascade,
+        > foreign key (ID) references instructor (ID)
+        > on delete cascade
+        > );
+        > 
+        > create table student
+        > (ID			varchar(5),
+        > name			varchar(20) not null,
+        > dept_name		varchar(20),
+        > tot_cred		numeric(3,0) check (tot_cred >= 0),
+        > primary key (ID),
+        > foreign key (dept_name) references department (dept_name)
+        > on delete set null
+        > );
+        > 
+        > create table takes
+        > (ID			varchar(5),
+        > course_id		varchar(8),
+        > sec_id			varchar(8),
+        > semester		varchar(6),
+        > year			numeric(4,0),
+        > grade		        varchar(2),
+        > primary key (ID, course_id, sec_id, semester, year),
+        > foreign key (course_id, sec_id, semester, year) references section (course_id, sec_id, semester, year)
+        > on delete cascade,
+        > foreign key (ID) references student (ID)
+        > on delete cascade
+        > );
+        > 
+        > create table advisor
+        > (s_ID			varchar(5),
+        > i_ID			varchar(5),
+        > primary key (s_ID),
+        > foreign key (i_ID) references instructor (ID)
+        > on delete set null,
+        > foreign key (s_ID) references student (ID)
+        > on delete cascade
+        > );
+        > 
+        > create table time_slot
+        > (time_slot_id		varchar(4),
+        > day			varchar(1),
+        > start_hr		numeric(2) check (start_hr >= 0 and start_hr < 24),
+        > start_min		numeric(2) check (start_min >= 0 and start_min < 60),
+        > end_hr			numeric(2) check (end_hr >= 0 and end_hr < 24),
+        > end_min		numeric(2) check (end_min >= 0 and end_min < 60),
+        > primary key (time_slot_id, day, start_hr, start_min)
+        > );
+        > 
+        > create table prereq
+        > (course_id		varchar(8),
+        > prereq_id		varchar(8),
+        > primary key (course_id, prereq_id),
+        > foreign key (course_id) references course (course_id)
+        > on delete cascade,
+        > foreign key (prereq_id) references course (course_id)
+        > ); 
+        > 
+        > 너가 쿼리를 짜기위해 step-by-step으로 생각할 과정은 다음과 같아.
+        > 
+        > 1. **목적 파악:** 평균 총 학점을 모든 과거 연도에 대해 계산해야 합니다. 이는 "prior years"라는 표현을 고려할 때 현재 연도를 제외하고 계산해야 한다는 것을 의미합니다.
+        > 2. **데이터 선택:** 관련 데이터가 어느 열에 있는지 어떤 데이터를 선택해야 하는지 확인해.
+        > 3. **시간 제한 설정:** 관련된 테이블을 참조하여 과거 연도의 데이터를 필터링해야 합니다. ' 수강한 과목의 연도 정보를 포함하고 있는 테이블을 참조해야 해.
+        > 4. **집계 함수 사용:** 'tot_cred'의 총 합을 계산한 후, 학생 수로 나누어 평균을 구합니다. 이를 위해 SQL의 **`SUM`**과 **`COUNT`** 집계 함수를 사용해.
+        > 5. **쿼리 작성:** 모든 학생의 'tot_cred' 값을 합산하고, 그 수로 나누어 평균 총 학점을 구합니다.
+        > 
+        > → 자 이제 Find the average total credits over all prior years. 의 결과를 출력하는 쿼리를 작성해줘
+        > 
 
 - 프롬프트 끝
 
   
 - 결과
     
-    SELECT AVG(tot_cred) as average_total_credits
-    FROM student
-    WHERE ID NOT IN (
-        SELECT DISTINCT ID
-        FROM takes
-        WHERE year = EXTRACT(YEAR FROM SYSDATE)
-    );
+        SELECT AVG(tot_cred) as average_total_credits
+        FROM student
+        WHERE ID NOT IN (
+            SELECT DISTINCT ID
+            FROM takes
+            WHERE year = EXTRACT(YEAR FROM SYSDATE)
+        );
     
 3.  `Give **some additional information**(i.e., explanation of table schema, PK/FK relationship, clause you want to use etc.) to ChatGPT to make the SQL query more accurate.`
 
 - 프롬프트 시작
   
-    > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
-    > 
-    > 
-    > create table classroom
-    > (building		varchar(15),
-    > room_number		varchar(7),
-    > capacity		numeric(4,0),
-    > primary key (building, room_number)
-    > );
-    > 
-    > create table department
-    > (dept_name		varchar(20),
-    > building		varchar(15),
-    > budget		        numeric(12,2) check (budget > 0),
-    > primary key (dept_name)
-    > );
-    > 
-    > create table course
-    > (course_id		varchar(8),
-    > title			varchar(50),
-    > dept_name		varchar(20),
-    > credits		numeric(2,0) check (credits > 0),
-    > primary key (course_id),
-    > foreign key (dept_name) references department (dept_name)
-    > on delete set null
-    > );
-    > 
-    > create table instructor
-    > (ID			varchar(5),
-    > name			varchar(20) not null,
-    > dept_name		varchar(20),
-    > salary			numeric(8,2) check (salary > 29000),
-    > primary key (ID),
-    > foreign key (dept_name) references department (dept_name)
-    > on delete set null
-    > );
-    > 
-    > create table section
-    > (course_id		varchar(8),
-    > sec_id			varchar(8),
-    > semester		varchar(6)
-    > check (semester in ('Fall', 'Winter', 'Spring', 'Summer')),
-    > year			numeric(4,0) check (year > 1701 and year < 2100),
-    > building		varchar(15),
-    > room_number		varchar(7),
-    > time_slot_id		varchar(4),
-    > primary key (course_id, sec_id, semester, year),
-    > foreign key (course_id) references course (course_id)
-    > on delete cascade,
-    > foreign key (building, room_number) references classroom (building, room_number)
-    > on delete set null
-    > );
-    > 
-    > create table teaches
-    > (ID			varchar(5),
-    > course_id		varchar(8),
-    > sec_id			varchar(8),
-    > semester		varchar(6),
-    > year			numeric(4,0),
-    > primary key (ID, course_id, sec_id, semester, year),
-    > foreign key (course_id, sec_id, semester, year) references section (course_id, sec_id, semester, year)
-    > on delete cascade,
-    > foreign key (ID) references instructor (ID)
-    > on delete cascade
-    > );
-    > 
-    > create table student
-    > (ID			varchar(5),
-    > name			varchar(20) not null,
-    > dept_name		varchar(20),
-    > tot_cred		numeric(3,0) check (tot_cred >= 0),
-    > primary key (ID),
-    > foreign key (dept_name) references department (dept_name)
-    > on delete set null
-    > );
-    > 
-    > create table takes
-    > (ID			varchar(5),
-    > course_id		varchar(8),
-    > sec_id			varchar(8),
-    > semester		varchar(6),
-    > year			numeric(4,0),
-    > grade		        varchar(2),
-    > primary key (ID, course_id, sec_id, semester, year),
-    > foreign key (course_id, sec_id, semester, year) references section (course_id, sec_id, semester, year)
-    > on delete cascade,
-    > foreign key (ID) references student (ID)
-    > on delete cascade
-    > );
-    > 
-    > create table advisor
-    > (s_ID			varchar(5),
-    > i_ID			varchar(5),
-    > primary key (s_ID),
-    > foreign key (i_ID) references instructor (ID)
-    > on delete set null,
-    > foreign key (s_ID) references student (ID)
-    > on delete cascade
-    > );
-    > 
-    > create table time_slot
-    > (time_slot_id		varchar(4),
-    > day			varchar(1),
-    > start_hr		numeric(2) check (start_hr >= 0 and start_hr < 24),
-    > start_min		numeric(2) check (start_min >= 0 and start_min < 60),
-    > end_hr			numeric(2) check (end_hr >= 0 and end_hr < 24),
-    > end_min		numeric(2) check (end_min >= 0 and end_min < 60),
-    > primary key (time_slot_id, day, start_hr, start_min)
-    > );
-    > 
-    > create table prereq
-    > (course_id		varchar(8),
-    > prereq_id		varchar(8),
-    > primary key (course_id, prereq_id),
-    > foreign key (course_id) references course (course_id)
-    > on delete cascade,
-    > foreign key (prereq_id) references course (course_id)
-    > ); 
-    > 
-    > 너가 쿼리를 짜기위해 step-by-step으로 생각할 과정은 다음과 같아.
-    > 
-    > 1. **목적 파악:** 평균 총 학점을 모든 과거 연도에 대해 계산해야 합니다. 이는 "prior years"라는 표현을 고려할 때 현재 연도를 제외하고 계산해야 한다는 것을 의미합니다.
-    > 2. **데이터 선택:** 관련 데이터가 어느 열에 있는지 어떤 데이터를 선택해야 하는지 확인해.
-    > 3. **시간 제한 설정:** 관련된 테이블을 참조하여 과거 연도의 데이터를 필터링해야 합니다. ' 수강한 과목의 연도 정보를 포함하고 있는 테이블을 참조해야 해.
-    > 4. **집계 함수 사용:** 'tot_cred'의 총 합을 계산한 후, 학생 수로 나누어 평균을 구합니다. 이를 위해 SQL의 **`SUM`**과 **`COUNT`** 집계 함수를 사용해.
-    > 5. **쿼리 작성:** 모든 학생의 'tot_cred' 값을 합산하고, 그 수로 나누어 평균 총 학점을 구합니다.
-    > 
-    > → 
-    > 
-    > *주의 사항
-    > 
-    > 1. 오류가 나지 않게 주의해
-    > 2. **To get the current year in Oracle,** you use **`EXTRACT(YEAR FROM SYSDATE)`**.
-    > 3. **To calculate the total credits for prior years,** we first need to filter out the current year's data. However, the **`takes`** table includes individual course enrollments, not total credits, and **`HAVING`** clause is used after **`GROUP BY`** to filter groups, not to filter out individual records for aggregation in a subquery.
-    > 
-    > → 이걸 주의하면서 Find the average total credits over all prior years. 의 결과를 출력하는 쿼리를 작성해줘. 쿼리 결과만 주면 돼.
-    > 
+        > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
+        > 
+        > 
+        > create table classroom
+        > (building		varchar(15),
+        > room_number		varchar(7),
+        > capacity		numeric(4,0),
+        > primary key (building, room_number)
+        > );
+        > 
+        > create table department
+        > (dept_name		varchar(20),
+        > building		varchar(15),
+        > budget		        numeric(12,2) check (budget > 0),
+        > primary key (dept_name)
+        > );
+        > 
+        > create table course
+        > (course_id		varchar(8),
+        > title			varchar(50),
+        > dept_name		varchar(20),
+        > credits		numeric(2,0) check (credits > 0),
+        > primary key (course_id),
+        > foreign key (dept_name) references department (dept_name)
+        > on delete set null
+        > );
+        > 
+        > create table instructor
+        > (ID			varchar(5),
+        > name			varchar(20) not null,
+        > dept_name		varchar(20),
+        > salary			numeric(8,2) check (salary > 29000),
+        > primary key (ID),
+        > foreign key (dept_name) references department (dept_name)
+        > on delete set null
+        > );
+        > 
+        > create table section
+        > (course_id		varchar(8),
+        > sec_id			varchar(8),
+        > semester		varchar(6)
+        > check (semester in ('Fall', 'Winter', 'Spring', 'Summer')),
+        > year			numeric(4,0) check (year > 1701 and year < 2100),
+        > building		varchar(15),
+        > room_number		varchar(7),
+        > time_slot_id		varchar(4),
+        > primary key (course_id, sec_id, semester, year),
+        > foreign key (course_id) references course (course_id)
+        > on delete cascade,
+        > foreign key (building, room_number) references classroom (building, room_number)
+        > on delete set null
+        > );
+        > 
+        > create table teaches
+        > (ID			varchar(5),
+        > course_id		varchar(8),
+        > sec_id			varchar(8),
+        > semester		varchar(6),
+        > year			numeric(4,0),
+        > primary key (ID, course_id, sec_id, semester, year),
+        > foreign key (course_id, sec_id, semester, year) references section (course_id, sec_id, semester, year)
+        > on delete cascade,
+        > foreign key (ID) references instructor (ID)
+        > on delete cascade
+        > );
+        > 
+        > create table student
+        > (ID			varchar(5),
+        > name			varchar(20) not null,
+        > dept_name		varchar(20),
+        > tot_cred		numeric(3,0) check (tot_cred >= 0),
+        > primary key (ID),
+        > foreign key (dept_name) references department (dept_name)
+        > on delete set null
+        > );
+        > 
+        > create table takes
+        > (ID			varchar(5),
+        > course_id		varchar(8),
+        > sec_id			varchar(8),
+        > semester		varchar(6),
+        > year			numeric(4,0),
+        > grade		        varchar(2),
+        > primary key (ID, course_id, sec_id, semester, year),
+        > foreign key (course_id, sec_id, semester, year) references section (course_id, sec_id, semester, year)
+        > on delete cascade,
+        > foreign key (ID) references student (ID)
+        > on delete cascade
+        > );
+        > 
+        > create table advisor
+        > (s_ID			varchar(5),
+        > i_ID			varchar(5),
+        > primary key (s_ID),
+        > foreign key (i_ID) references instructor (ID)
+        > on delete set null,
+        > foreign key (s_ID) references student (ID)
+        > on delete cascade
+        > );
+        > 
+        > create table time_slot
+        > (time_slot_id		varchar(4),
+        > day			varchar(1),
+        > start_hr		numeric(2) check (start_hr >= 0 and start_hr < 24),
+        > start_min		numeric(2) check (start_min >= 0 and start_min < 60),
+        > end_hr			numeric(2) check (end_hr >= 0 and end_hr < 24),
+        > end_min		numeric(2) check (end_min >= 0 and end_min < 60),
+        > primary key (time_slot_id, day, start_hr, start_min)
+        > );
+        > 
+        > create table prereq
+        > (course_id		varchar(8),
+        > prereq_id		varchar(8),
+        > primary key (course_id, prereq_id),
+        > foreign key (course_id) references course (course_id)
+        > on delete cascade,
+        > foreign key (prereq_id) references course (course_id)
+        > ); 
+        > 
+        > 너가 쿼리를 짜기위해 step-by-step으로 생각할 과정은 다음과 같아.
+        > 
+        > 1. **목적 파악:** 평균 총 학점을 모든 과거 연도에 대해 계산해야 합니다. 이는 "prior years"라는 표현을 고려할 때 현재 연도를 제외하고 계산해야 한다는 것을 의미합니다.
+        > 2. **데이터 선택:** 관련 데이터가 어느 열에 있는지 어떤 데이터를 선택해야 하는지 확인해.
+        > 3. **시간 제한 설정:** 관련된 테이블을 참조하여 과거 연도의 데이터를 필터링해야 합니다. ' 수강한 과목의 연도 정보를 포함하고 있는 테이블을 참조해야 해.
+        > 4. **집계 함수 사용:** 'tot_cred'의 총 합을 계산한 후, 학생 수로 나누어 평균을 구합니다. 이를 위해 SQL의 **`SUM`**과 **`COUNT`** 집계 함수를 사용해.
+        > 5. **쿼리 작성:** 모든 학생의 'tot_cred' 값을 합산하고, 그 수로 나누어 평균 총 학점을 구합니다.
+        > 
+        > → 
+        > 
+        > *주의 사항
+        > 
+        > 1. 오류가 나지 않게 주의해
+        > 2. **To get the current year in Oracle,** you use **`EXTRACT(YEAR FROM SYSDATE)`**.
+        > 3. **To calculate the total credits for prior years,** we first need to filter out the current year's data. However, the **`takes`** table includes individual course enrollments, not total credits, and **`HAVING`** clause is used after **`GROUP BY`** to filter groups, not to filter out individual records for aggregation in a subquery.
+        > 
+        > → 이걸 주의하면서 Find the average total credits over all prior years. 의 결과를 출력하는 쿼리를 작성해줘. 쿼리 결과만 주면 돼.
+        > 
 
 - 프롬프트 끝
 
   
 - 결과
     
-    SELECT AVG(tot_cred) AS average_total_credits
-    FROM student
-    WHERE ID NOT IN (
-      SELECT ID
-      FROM takes
-      WHERE year = EXTRACT(YEAR FROM CURRENT_DATE)
-    );
+        SELECT AVG(tot_cred) AS average_total_credits
+        FROM student
+        WHERE ID NOT IN (
+          SELECT ID
+          FROM takes
+          WHERE year = EXTRACT(YEAR FROM CURRENT_DATE)
+        );
     
     ***분석***
     
@@ -1423,62 +1429,62 @@
 
 - 프롬프트 시작
       
-    > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
-    > 
-    > 
-    > CREATE TABLE DEPT (
-    > DEPTNO NUMBER(2) CONSTRAINT PK_DEPT PRIMARY KEY,
-    > DNAME VARCHAR2(14) ,
-    > LOC VARCHAR2(13) ) ;
-    > 
-    > CREATE TABLE EMP(
-    > EMPNO NUMBER(4) CONSTRAINT PK_EMP PRIMARY KEY,
-    > ENAME VARCHAR2(10),
-    > JOB VARCHAR2(9),
-    > MGR NUMBER(4),
-    > HIREDATE DATE,
-    > SAL NUMBER(7,2),
-    > COMM NUMBER(7,2),
-    > DEPTNO NUMBER(2) CONSTRAINT FK_DEPTNO REFERENCES DEPT);
-    > 
-    > CREATE TABLE BONUS (
-    > ENAME VARCHAR2(10) ,
-    > JOB VARCHAR2(9)  ,
-    > SAL NUMBER,
-    > COMM NUMBER
-    > ) ;
-    > 
-    > CREATE TABLE SALGRADE (
-    > GRADE NUMBER,
-    > LOSAL NUMBER,
-    > HISAL NUMBER
-    > );
-    > 
-    > 너가 쿼리를 짜기위해 step-by-step으로 생각할 과정은 다음과 같아.
-    > 
-    > 1. **결과 정의:** 문제를 이해하고, 어떤 결과가 필요한지 정의합니다. 이 경우, 모든 직원을 급여 순으로 정렬하고, 하위 25%의 목록을 얻어야 합니다.
-    > 2. **데이터셋 크기 고려:** 전체 데이터셋의 크기가 주어졌을 때(60명의 직원), 하위 25%를 찾기 위해 전체 직원 수의 75% 위치를 계산합니다.
-    > 3. **정렬 메커니즘 선택:** 직원을 급여에 따라 정렬하기 위해 **`ORDER BY`** 절과 함께 **`ROW_NUMBER()`** 윈도우 함수를 사용합니다. **`ROW_NUMBER()`**는 각 행에 순차적 번호를 할당하여 급여 순위를 생성합니다.
-    > 4. **필터링 조건 설정:** 하위 25%에 해당하는 직원만 선택하기 위해 **`WHERE`** 절을 사용하여 75% 위치보다 높은 급여 순위를 가진 직원을 필터링합니다.
-    > 5. **쿼리 구조화:** 위의 생각 과정을 바탕으로, 서브쿼리를 사용하여 각 직원에 대한 전체 데이터와 그들의 급여 순위를 선택하고, 그 결과를 외부 쿼리에서 필터링하여 최종 결과를 얻습니다.
-    > 6. **쿼리 최적화 고려:** 쿼리 효율성을 고려하여 필요한 최소한의 컬럼만을 선택하거나 적절한 인덱스 사용을 고려할 수 있습니다.
-    > 7. **동적 데이터셋 적응성:** 데이터셋의 크기가 변할 수 있는 경우를 대비하여, 직원 수를 동적으로 계산하는 방법을 고려합니다. 이 예에서는 고정된 숫자(60)를 사용했지만, 직원 수가 변동될 경우 **`COUNT(*) OVER()`** 함수를 사용하여 전체 직원 수를 계산한 후 이를 기준으로 25%를 계산할 수 있습니다.
-    > 
-    > → 자 이제 List the last 25% of employees when ranking by salary. (Evaluation data will consist of 60 tuples.)의 결과를 출력하는 쿼리를 작성해줘 
-    > 
+        > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
+        > 
+        > 
+        > CREATE TABLE DEPT (
+        > DEPTNO NUMBER(2) CONSTRAINT PK_DEPT PRIMARY KEY,
+        > DNAME VARCHAR2(14) ,
+        > LOC VARCHAR2(13) ) ;
+        > 
+        > CREATE TABLE EMP(
+        > EMPNO NUMBER(4) CONSTRAINT PK_EMP PRIMARY KEY,
+        > ENAME VARCHAR2(10),
+        > JOB VARCHAR2(9),
+        > MGR NUMBER(4),
+        > HIREDATE DATE,
+        > SAL NUMBER(7,2),
+        > COMM NUMBER(7,2),
+        > DEPTNO NUMBER(2) CONSTRAINT FK_DEPTNO REFERENCES DEPT);
+        > 
+        > CREATE TABLE BONUS (
+        > ENAME VARCHAR2(10) ,
+        > JOB VARCHAR2(9)  ,
+        > SAL NUMBER,
+        > COMM NUMBER
+        > ) ;
+        > 
+        > CREATE TABLE SALGRADE (
+        > GRADE NUMBER,
+        > LOSAL NUMBER,
+        > HISAL NUMBER
+        > );
+        > 
+        > 너가 쿼리를 짜기위해 step-by-step으로 생각할 과정은 다음과 같아.
+        > 
+        > 1. **결과 정의:** 문제를 이해하고, 어떤 결과가 필요한지 정의합니다. 이 경우, 모든 직원을 급여 순으로 정렬하고, 하위 25%의 목록을 얻어야 합니다.
+        > 2. **데이터셋 크기 고려:** 전체 데이터셋의 크기가 주어졌을 때(60명의 직원), 하위 25%를 찾기 위해 전체 직원 수의 75% 위치를 계산합니다.
+        > 3. **정렬 메커니즘 선택:** 직원을 급여에 따라 정렬하기 위해 **`ORDER BY`** 절과 함께 **`ROW_NUMBER()`** 윈도우 함수를 사용합니다. **`ROW_NUMBER()`**는 각 행에 순차적 번호를 할당하여 급여 순위를 생성합니다.
+        > 4. **필터링 조건 설정:** 하위 25%에 해당하는 직원만 선택하기 위해 **`WHERE`** 절을 사용하여 75% 위치보다 높은 급여 순위를 가진 직원을 필터링합니다.
+        > 5. **쿼리 구조화:** 위의 생각 과정을 바탕으로, 서브쿼리를 사용하여 각 직원에 대한 전체 데이터와 그들의 급여 순위를 선택하고, 그 결과를 외부 쿼리에서 필터링하여 최종 결과를 얻습니다.
+        > 6. **쿼리 최적화 고려:** 쿼리 효율성을 고려하여 필요한 최소한의 컬럼만을 선택하거나 적절한 인덱스 사용을 고려할 수 있습니다.
+        > 7. **동적 데이터셋 적응성:** 데이터셋의 크기가 변할 수 있는 경우를 대비하여, 직원 수를 동적으로 계산하는 방법을 고려합니다. 이 예에서는 고정된 숫자(60)를 사용했지만, 직원 수가 변동될 경우 **`COUNT(*) OVER()`** 함수를 사용하여 전체 직원 수를 계산한 후 이를 기준으로 25%를 계산할 수 있습니다.
+        > 
+        > → 자 이제 List the last 25% of employees when ranking by salary. (Evaluation data will consist of 60 tuples.)의 결과를 출력하는 쿼리를 작성해줘 
+        > 
 
 - 프롬프트 끝
 
   
 - 결과
     
-    SELECT ENAME, SAL
-    FROM (
-      SELECT ENAME, SAL, ROW_NUMBER() OVER (ORDER BY SAL) as SAL_RANK, COUNT(*) OVER () as TOTAL_COUNT
-      FROM EMP
-    ) WHERE SAL_RANK > (0.75 * TOTAL_COUNT)
-    ORDER BY SAL;
-    
+        SELECT ENAME, SAL
+        FROM (
+          SELECT ENAME, SAL, ROW_NUMBER() OVER (ORDER BY SAL) as SAL_RANK, COUNT(*) OVER () as TOTAL_COUNT
+          FROM EMP
+        ) WHERE SAL_RANK > (0.75 * TOTAL_COUNT)
+        ORDER BY SAL;
+        
 
 ---
 
@@ -1486,70 +1492,70 @@
 
 - 프롬프트 시작
       
-    > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
-    > 
-    > 
-    > CREATE TABLE DEPT (
-    > DEPTNO NUMBER(2) CONSTRAINT PK_DEPT PRIMARY KEY,
-    > DNAME VARCHAR2(14) ,
-    > LOC VARCHAR2(13) ) ;
-    > 
-    > CREATE TABLE EMP(
-    > EMPNO NUMBER(4) CONSTRAINT PK_EMP PRIMARY KEY,
-    > ENAME VARCHAR2(10),
-    > JOB VARCHAR2(9),
-    > MGR NUMBER(4),
-    > HIREDATE DATE,
-    > SAL NUMBER(7,2),
-    > COMM NUMBER(7,2),
-    > DEPTNO NUMBER(2) CONSTRAINT FK_DEPTNO REFERENCES DEPT);
-    > 
-    > CREATE TABLE BONUS (
-    > ENAME VARCHAR2(10) ,
-    > JOB VARCHAR2(9)  ,
-    > SAL NUMBER,
-    > COMM NUMBER
-    > ) ;
-    > 
-    > CREATE TABLE SALGRADE (
-    > GRADE NUMBER,
-    > LOSAL NUMBER,
-    > HISAL NUMBER
-    > );
-    > 
-    > 너가 쿼리를 짜기위해 step-by-step으로 생각할 과정은 다음과 같아.
-    > 
-    > 1. **결과 정의:** 문제를 이해하고, 어떤 결과가 필요한지 정의합니다. 이 경우, 모든 직원을 급여 순으로 정렬하고, 하위 25%의 목록을 얻어야 합니다.
-    > 2. **데이터셋 크기 고려:** 전체 데이터셋의 크기가 주어졌을 때(60명의 직원), 하위 25%를 찾기 위해 전체 직원 수의 75% 위치를 계산합니다.
-    > 3. **정렬 메커니즘 선택:** 직원을 급여에 따라 정렬하기 위해 **`ORDER BY`** 절과 함께 **`ROW_NUMBER()`** 윈도우 함수를 사용합니다. **`ROW_NUMBER()`**는 각 행에 순차적 번호를 할당하여 급여 순위를 생성합니다.
-    > 4. **필터링 조건 설정:** 하위 25%에 해당하는 직원만 선택하기 위해 **`WHERE`** 절을 사용하여 75% 위치보다 높은 급여 순위를 가진 직원을 필터링합니다.
-    > 5. **쿼리 구조화:** 위의 생각 과정을 바탕으로, 서브쿼리를 사용하여 각 직원에 대한 전체 데이터와 그들의 급여 순위를 선택하고, 그 결과를 외부 쿼리에서 필터링하여 최종 결과를 얻습니다.
-    > 6. **쿼리 최적화 고려:** 쿼리 효율성을 고려하여 필요한 최소한의 컬럼만을 선택하거나 적절한 인덱스 사용을 고려할 수 있습니다.
-    > 7. **동적 데이터셋 적응성:** 데이터셋의 크기가 변할 수 있는 경우를 대비하여, 직원 수를 동적으로 계산하는 방법을 고려합니다. 이 예에서는 고정된 숫자(60)를 사용했지만, 직원 수가 변동될 경우 **`COUNT(*) OVER()`** 함수를 사용하여 전체 직원 수를 계산한 후 이를 기준으로 25%를 계산할 수 있습니다.
-    > 
-    > → 자 이제 List the last 25% of employees when ranking by salary. (Evaluation data will consist of 60 tuples.)의 결과를 출력하는 쿼리를 작성해줘 
-    > 
-    > *주의 사항
-    > 
-    > 1. 오류가 나지 않게 주의해
-    > 2. It will rank employees by their salary in descending order using the **`ROW_NUMBER()`** function.
-    > 3. It will count the total number of employees using the **`COUNT(*) OVER()`** function without partitioning, which will result in the total number being the same for each row, representing the total number of employees.
-    > 4. The **`WHERE`** clause filters the results to only include those rows where the rank is greater than the threshold for the last 25% of the total count (which is calculated as **`0.75 * total_count`**).
-    > 5. The **`ORDER BY`** clause at the end of the outer query makes sure to list the employees in descending order of their salaries, even though you are only returning the bottom quartile.
-    > 
-    > → 이걸 주의하면서 자 이제 List the last 25% of employees when ranking by salary. (Evaluation data will consist of 60 tuples.)의 결과를 출력하는 쿼리를 작성해줘  쿼리 결과만 주면 돼.
-    > 
+        > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
+        > 
+        > 
+        > CREATE TABLE DEPT (
+        > DEPTNO NUMBER(2) CONSTRAINT PK_DEPT PRIMARY KEY,
+        > DNAME VARCHAR2(14) ,
+        > LOC VARCHAR2(13) ) ;
+        > 
+        > CREATE TABLE EMP(
+        > EMPNO NUMBER(4) CONSTRAINT PK_EMP PRIMARY KEY,
+        > ENAME VARCHAR2(10),
+        > JOB VARCHAR2(9),
+        > MGR NUMBER(4),
+        > HIREDATE DATE,
+        > SAL NUMBER(7,2),
+        > COMM NUMBER(7,2),
+        > DEPTNO NUMBER(2) CONSTRAINT FK_DEPTNO REFERENCES DEPT);
+        > 
+        > CREATE TABLE BONUS (
+        > ENAME VARCHAR2(10) ,
+        > JOB VARCHAR2(9)  ,
+        > SAL NUMBER,
+        > COMM NUMBER
+        > ) ;
+        > 
+        > CREATE TABLE SALGRADE (
+        > GRADE NUMBER,
+        > LOSAL NUMBER,
+        > HISAL NUMBER
+        > );
+        > 
+        > 너가 쿼리를 짜기위해 step-by-step으로 생각할 과정은 다음과 같아.
+        > 
+        > 1. **결과 정의:** 문제를 이해하고, 어떤 결과가 필요한지 정의합니다. 이 경우, 모든 직원을 급여 순으로 정렬하고, 하위 25%의 목록을 얻어야 합니다.
+        > 2. **데이터셋 크기 고려:** 전체 데이터셋의 크기가 주어졌을 때(60명의 직원), 하위 25%를 찾기 위해 전체 직원 수의 75% 위치를 계산합니다.
+        > 3. **정렬 메커니즘 선택:** 직원을 급여에 따라 정렬하기 위해 **`ORDER BY`** 절과 함께 **`ROW_NUMBER()`** 윈도우 함수를 사용합니다. **`ROW_NUMBER()`**는 각 행에 순차적 번호를 할당하여 급여 순위를 생성합니다.
+        > 4. **필터링 조건 설정:** 하위 25%에 해당하는 직원만 선택하기 위해 **`WHERE`** 절을 사용하여 75% 위치보다 높은 급여 순위를 가진 직원을 필터링합니다.
+        > 5. **쿼리 구조화:** 위의 생각 과정을 바탕으로, 서브쿼리를 사용하여 각 직원에 대한 전체 데이터와 그들의 급여 순위를 선택하고, 그 결과를 외부 쿼리에서 필터링하여 최종 결과를 얻습니다.
+        > 6. **쿼리 최적화 고려:** 쿼리 효율성을 고려하여 필요한 최소한의 컬럼만을 선택하거나 적절한 인덱스 사용을 고려할 수 있습니다.
+        > 7. **동적 데이터셋 적응성:** 데이터셋의 크기가 변할 수 있는 경우를 대비하여, 직원 수를 동적으로 계산하는 방법을 고려합니다. 이 예에서는 고정된 숫자(60)를 사용했지만, 직원 수가 변동될 경우 **`COUNT(*) OVER()`** 함수를 사용하여 전체 직원 수를 계산한 후 이를 기준으로 25%를 계산할 수 있습니다.
+        > 
+        > → 자 이제 List the last 25% of employees when ranking by salary. (Evaluation data will consist of 60 tuples.)의 결과를 출력하는 쿼리를 작성해줘 
+        > 
+        > *주의 사항
+        > 
+        > 1. 오류가 나지 않게 주의해
+        > 2. It will rank employees by their salary in descending order using the **`ROW_NUMBER()`** function.
+        > 3. It will count the total number of employees using the **`COUNT(*) OVER()`** function without partitioning, which will result in the total number being the same for each row, representing the total number of employees.
+        > 4. The **`WHERE`** clause filters the results to only include those rows where the rank is greater than the threshold for the last 25% of the total count (which is calculated as **`0.75 * total_count`**).
+        > 5. The **`ORDER BY`** clause at the end of the outer query makes sure to list the employees in descending order of their salaries, even though you are only returning the bottom quartile.
+        > 
+        > → 이걸 주의하면서 자 이제 List the last 25% of employees when ranking by salary. (Evaluation data will consist of 60 tuples.)의 결과를 출력하는 쿼리를 작성해줘  쿼리 결과만 주면 돼.
+        > 
 
 - 프롬프트 끝
   
 - 결과
     
-    SELECT ENAME, SAL
-    FROM (
-      SELECT ENAME, SAL, ROW_NUMBER() OVER (ORDER BY SAL DESC) AS rn, COUNT(*) OVER() AS total_count
-      FROM EMP
-    ) WHERE rn > (0.75 * total_count)
-    ORDER BY SAL DESC;
+        SELECT ENAME, SAL
+        FROM (
+          SELECT ENAME, SAL, ROW_NUMBER() OVER (ORDER BY SAL DESC) AS rn, COUNT(*) OVER() AS total_count
+          FROM EMP
+        ) WHERE rn > (0.75 * total_count)
+        ORDER BY SAL DESC;
 
 
     ***분석***
@@ -1839,65 +1845,65 @@
 - 프롬프트 시작
 
 
-    > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
-    > 
-    > 
-    > CREATE TABLE DEPT (
-    > DEPTNO NUMBER(2) CONSTRAINT PK_DEPT PRIMARY KEY,
-    > DNAME VARCHAR2(14) ,
-    > LOC VARCHAR2(13) ) ;
-    > 
-    > CREATE TABLE EMP(
-    > EMPNO NUMBER(4) CONSTRAINT PK_EMP PRIMARY KEY,
-    > ENAME VARCHAR2(10),
-    > JOB VARCHAR2(9),
-    > MGR NUMBER(4),
-    > HIREDATE DATE,
-    > SAL NUMBER(7,2),
-    > COMM NUMBER(7,2),
-    > DEPTNO NUMBER(2) CONSTRAINT FK_DEPTNO REFERENCES DEPT);
-    > 
-    > CREATE TABLE BONUS (
-    > ENAME VARCHAR2(10) ,
-    > JOB VARCHAR2(9)  ,
-    > SAL NUMBER,
-    > COMM NUMBER
-    > ) ;
-    > 
-    > CREATE TABLE SALGRADE (
-    > GRADE NUMBER,
-    > LOSAL NUMBER,
-    > HISAL NUMBER
-    > );
-    > 
-    > 너가 쿼리를 짜기위해 step-by-step으로 생각할 과정은 다음과 같아.
-    > 
-    > 1. **Identify the Objective:** You're tasked with finding the total salaries for two groups of departments, 'SALES & ACCOUNT' and 'RESEARCH & OPERATION'. This requires summing salaries in each group.
-    > 2. **Determine the Necessary Data:** You need to select salary information from the 'EMP' table and department names from the 'DEPT' table, requiring a way to correlate the two.
-    > 3. **Understand Data Relations:** Since department names are given, and you need to calculate based on department numbers, you'll need to correlate department names with their respective numbers, likely through a join or subquery.
-    > 4. **Decide on Grouping Strategy:** You need to group salaries by department but only for the specified pairs. This implies a need for conditional grouping, which can be achieved by filtering departments within the 'WHERE' clause or using a 'CASE' expression within the 'SUM' function.
-    > 5. **Aggregate Salary Data:** Using the 'SUM' function, you can calculate the total salary for each department group. You might consider using subqueries to filter for 'DEPTNO' corresponding to each named group before aggregation.
-    > 6. **Craft the Query with Unions:** Since you have two distinct department groups, you'll construct two select queries, one for each group, and combine them using 'UNION ALL' to get a complete picture in one result set.
-    > 7. **Optimize for Readability and Performance:** Ensure the query is readable by clearly labeling results with 'AS' for column aliases. Additionally, optimize performance by only querying necessary columns and using 'UNION ALL' instead of 'UNION' to avoid unnecessary sorting and duplicate elimination.
-    > 
-    > → 자 이제 Suppose we have only 4 departments(SALES, ACCOUNT, RESEARCH, OPERATION) in DEPT table. Show [1] the total salaries in the "SALES" and "ACCOUNT" deparments combined and [2] in the "RESEARCH" and "OPERATION" departments combined.의 결과를 출력하는 쿼리를 작성해줘.
-    > 
+        > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
+        > 
+        > 
+        > CREATE TABLE DEPT (
+        > DEPTNO NUMBER(2) CONSTRAINT PK_DEPT PRIMARY KEY,
+        > DNAME VARCHAR2(14) ,
+        > LOC VARCHAR2(13) ) ;
+        > 
+        > CREATE TABLE EMP(
+        > EMPNO NUMBER(4) CONSTRAINT PK_EMP PRIMARY KEY,
+        > ENAME VARCHAR2(10),
+        > JOB VARCHAR2(9),
+        > MGR NUMBER(4),
+        > HIREDATE DATE,
+        > SAL NUMBER(7,2),
+        > COMM NUMBER(7,2),
+        > DEPTNO NUMBER(2) CONSTRAINT FK_DEPTNO REFERENCES DEPT);
+        > 
+        > CREATE TABLE BONUS (
+        > ENAME VARCHAR2(10) ,
+        > JOB VARCHAR2(9)  ,
+        > SAL NUMBER,
+        > COMM NUMBER
+        > ) ;
+        > 
+        > CREATE TABLE SALGRADE (
+        > GRADE NUMBER,
+        > LOSAL NUMBER,
+        > HISAL NUMBER
+        > );
+        > 
+        > 너가 쿼리를 짜기위해 step-by-step으로 생각할 과정은 다음과 같아.
+        > 
+        > 1. **Identify the Objective:** You're tasked with finding the total salaries for two groups of departments, 'SALES & ACCOUNT' and 'RESEARCH & OPERATION'. This requires summing salaries in each group.
+        > 2. **Determine the Necessary Data:** You need to select salary information from the 'EMP' table and department names from the 'DEPT' table, requiring a way to correlate the two.
+        > 3. **Understand Data Relations:** Since department names are given, and you need to calculate based on department numbers, you'll need to correlate department names with their respective numbers, likely through a join or subquery.
+        > 4. **Decide on Grouping Strategy:** You need to group salaries by department but only for the specified pairs. This implies a need for conditional grouping, which can be achieved by filtering departments within the 'WHERE' clause or using a 'CASE' expression within the 'SUM' function.
+        > 5. **Aggregate Salary Data:** Using the 'SUM' function, you can calculate the total salary for each department group. You might consider using subqueries to filter for 'DEPTNO' corresponding to each named group before aggregation.
+        > 6. **Craft the Query with Unions:** Since you have two distinct department groups, you'll construct two select queries, one for each group, and combine them using 'UNION ALL' to get a complete picture in one result set.
+        > 7. **Optimize for Readability and Performance:** Ensure the query is readable by clearly labeling results with 'AS' for column aliases. Additionally, optimize performance by only querying necessary columns and using 'UNION ALL' instead of 'UNION' to avoid unnecessary sorting and duplicate elimination.
+        > 
+        > → 자 이제 Suppose we have only 4 departments(SALES, ACCOUNT, RESEARCH, OPERATION) in DEPT table. Show [1] the total salaries in the "SALES" and "ACCOUNT" deparments combined and [2] in the "RESEARCH" and "OPERATION" departments combined.의 결과를 출력하는 쿼리를 작성해줘.
+        > 
 
 - 프롬프트 끝
 
   
     결과
     
-    SELECT 'SALES & ACCOUNT' AS Department_Group, SUM(SAL) AS Total_Salary
-    FROM EMP
-    JOIN DEPT ON EMP.DEPTNO = DEPT.DEPTNO
-    WHERE DNAME IN ('SALES', 'ACCOUNT')
-    UNION ALL
-    SELECT 'RESEARCH & OPERATION' AS Department_Group, SUM(SAL) AS Total_Salary
-    FROM EMP
-    JOIN DEPT ON EMP.DEPTNO = DEPT.DEPTNO
-    WHERE DNAME IN ('RESEARCH', 'OPERATION');
-    
+        SELECT 'SALES & ACCOUNT' AS Department_Group, SUM(SAL) AS Total_Salary
+        FROM EMP
+        JOIN DEPT ON EMP.DEPTNO = DEPT.DEPTNO
+        WHERE DNAME IN ('SALES', 'ACCOUNT')
+        UNION ALL
+        SELECT 'RESEARCH & OPERATION' AS Department_Group, SUM(SAL) AS Total_Salary
+        FROM EMP
+        JOIN DEPT ON EMP.DEPTNO = DEPT.DEPTNO
+        WHERE DNAME IN ('RESEARCH', 'OPERATION');
+        
 
 ---
 
@@ -1906,66 +1912,66 @@
 - 프롬프트 시작
 
 
-    > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
-    > 
-    > 
-    > CREATE TABLE DEPT (
-    > DEPTNO NUMBER(2) CONSTRAINT PK_DEPT PRIMARY KEY,
-    > DNAME VARCHAR2(14) ,
-    > LOC VARCHAR2(13) ) ;
-    > 
-    > CREATE TABLE EMP(
-    > EMPNO NUMBER(4) CONSTRAINT PK_EMP PRIMARY KEY,
-    > ENAME VARCHAR2(10),
-    > JOB VARCHAR2(9),
-    > MGR NUMBER(4),
-    > HIREDATE DATE,
-    > SAL NUMBER(7,2),
-    > COMM NUMBER(7,2),
-    > DEPTNO NUMBER(2) CONSTRAINT FK_DEPTNO REFERENCES DEPT);
-    > 
-    > CREATE TABLE BONUS (
-    > ENAME VARCHAR2(10) ,
-    > JOB VARCHAR2(9)  ,
-    > SAL NUMBER,
-    > COMM NUMBER
-    > ) ;
-    > 
-    > CREATE TABLE SALGRADE (
-    > GRADE NUMBER,
-    > LOSAL NUMBER,
-    > HISAL NUMBER
-    > );
-    > 
-    > 너가 쿼리를 짜기위해 step-by-step으로 생각할 과정은 다음과 같아.
-    > 
-    > *주의 사항
-    > 
-    > 1. 오류가 나지 않게 주의해
-    > 2. **Understand the Schema:** The schema provided has a 'DEPT' table with department names and numbers and an 'EMP' table with employee details, including their department numbers and salaries.
-    > 3. **Link Departments to Salaries:** You need to join 'EMP' and 'DEPT' tables to match employees to their departments. The 'deptno' column in both tables serves as the link between them.
-    > 4. **Isolate the Desired Departments:** Filter out employees working in the 'SALES,' 'ACCOUNT,' 'RESEARCH,' and 'OPERATION' departments.
-    > 5. **Sum Salaries by Department Group:** Aggregate the salaries for each of the desired department groups. This will require summing 'sal' from 'EMP' for each department, grouped according to the department names you are interested in.
-    > 6. **Combine the Results:** Since you are asked for combined totals for 'SALES & ACCOUNT' and 'RESEARCH & OPERATION,' you may use a 'UNION ALL' to bring these two groups' totals into one result.
-    > 
-    > → 이걸 주의하면서 자 이제 Suppose we have only 4 departments(SALES, ACCOUNT, RESEARCH, OPERATION) in DEPT table. Show [1] the total salaries in the "SALES" and "ACCOUNT" deparments combined and [2] in the "RESEARCH" and "OPERATION" departments combined.의 결과를 출력하는 쿼리를 작성해줘  쿼리 결과만 주면 돼.
-    > 
+        > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
+        > 
+        > 
+        > CREATE TABLE DEPT (
+        > DEPTNO NUMBER(2) CONSTRAINT PK_DEPT PRIMARY KEY,
+        > DNAME VARCHAR2(14) ,
+        > LOC VARCHAR2(13) ) ;
+        > 
+        > CREATE TABLE EMP(
+        > EMPNO NUMBER(4) CONSTRAINT PK_EMP PRIMARY KEY,
+        > ENAME VARCHAR2(10),
+        > JOB VARCHAR2(9),
+        > MGR NUMBER(4),
+        > HIREDATE DATE,
+        > SAL NUMBER(7,2),
+        > COMM NUMBER(7,2),
+        > DEPTNO NUMBER(2) CONSTRAINT FK_DEPTNO REFERENCES DEPT);
+        > 
+        > CREATE TABLE BONUS (
+        > ENAME VARCHAR2(10) ,
+        > JOB VARCHAR2(9)  ,
+        > SAL NUMBER,
+        > COMM NUMBER
+        > ) ;
+        > 
+        > CREATE TABLE SALGRADE (
+        > GRADE NUMBER,
+        > LOSAL NUMBER,
+        > HISAL NUMBER
+        > );
+        > 
+        > 너가 쿼리를 짜기위해 step-by-step으로 생각할 과정은 다음과 같아.
+        > 
+        > *주의 사항
+        > 
+        > 1. 오류가 나지 않게 주의해
+        > 2. **Understand the Schema:** The schema provided has a 'DEPT' table with department names and numbers and an 'EMP' table with employee details, including their department numbers and salaries.
+        > 3. **Link Departments to Salaries:** You need to join 'EMP' and 'DEPT' tables to match employees to their departments. The 'deptno' column in both tables serves as the link between them.
+        > 4. **Isolate the Desired Departments:** Filter out employees working in the 'SALES,' 'ACCOUNT,' 'RESEARCH,' and 'OPERATION' departments.
+        > 5. **Sum Salaries by Department Group:** Aggregate the salaries for each of the desired department groups. This will require summing 'sal' from 'EMP' for each department, grouped according to the department names you are interested in.
+        > 6. **Combine the Results:** Since you are asked for combined totals for 'SALES & ACCOUNT' and 'RESEARCH & OPERATION,' you may use a 'UNION ALL' to bring these two groups' totals into one result.
+        > 
+        > → 이걸 주의하면서 자 이제 Suppose we have only 4 departments(SALES, ACCOUNT, RESEARCH, OPERATION) in DEPT table. Show [1] the total salaries in the "SALES" and "ACCOUNT" deparments combined and [2] in the "RESEARCH" and "OPERATION" departments combined.의 결과를 출력하는 쿼리를 작성해줘  쿼리 결과만 주면 돼.
+        > 
 
 
 - 프롬프트 끝
   
 - 결과
     
-    SELECT 'SALES & ACCOUNT' AS Department_Group, SUM(SAL) AS Total_Salary
-    FROM EMP E
-    JOIN DEPT D ON E.DEPTNO = D.DEPTNO
-    WHERE DNAME IN ('SALES', 'ACCOUNT')
-    UNION ALL
-    SELECT 'RESEARCH & OPERATION' AS Department_Group, SUM(SAL) AS Total_Salary
-    FROM EMP E
-    JOIN DEPT D ON E.DEPTNO = D.DEPTNO
-    WHERE DNAME IN ('RESEARCH', 'OPERATION');
-    
+        SELECT 'SALES & ACCOUNT' AS Department_Group, SUM(SAL) AS Total_Salary
+        FROM EMP E
+        JOIN DEPT D ON E.DEPTNO = D.DEPTNO
+        WHERE DNAME IN ('SALES', 'ACCOUNT')
+        UNION ALL
+        SELECT 'RESEARCH & OPERATION' AS Department_Group, SUM(SAL) AS Total_Salary
+        FROM EMP E
+        JOIN DEPT D ON E.DEPTNO = D.DEPTNO
+        WHERE DNAME IN ('RESEARCH', 'OPERATION');
+        
     ***분석***
     
     <aside>
@@ -2252,196 +2258,196 @@
 
 - 프롬프트 시작
   
-    > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
-    > 
-    > 
-    > CREATE TABLE author (
-    > author_id NUMBER,
-    > author_name VARCHAR2(400),
-    > CONSTRAINT pk_author PRIMARY KEY (author_id)
-    > );
-    > 
-    > CREATE TABLE publisher (
-    > publisher_id NUMBER,
-    > publisher_name VARCHAR2(400),
-    > CONSTRAINT pk_publisher PRIMARY KEY (publisher_id)
-    > );
-    > 
-    > CREATE TABLE book_language (
-    > language_id NUMBER,
-    > language_code VARCHAR2(8),
-    > language_name VARCHAR2(50),
-    > CONSTRAINT pk_language PRIMARY KEY (language_id)
-    > );
-    > 
-    > CREATE TABLE book (
-    > book_id NUMBER,
-    > title VARCHAR2(400),
-    > isbn13 VARCHAR2(13),
-    > language_id NUMBER,
-    > num_pages NUMBER,
-    > publication_date DATE,
-    > publisher_id NUMBER,
-    > CONSTRAINT pk_book PRIMARY KEY (book_id),
-    > CONSTRAINT fk_book_lang FOREIGN KEY (language_id) REFERENCES book_language (language_id),
-    > CONSTRAINT fk_book_pub FOREIGN KEY (publisher_id) REFERENCES publisher (publisher_id)
-    > );
-    > 
-    > CREATE TABLE book_author (
-    > book_id NUMBER,
-    > author_id NUMBER,
-    > CONSTRAINT pk_bookauthor PRIMARY KEY (book_id, author_id),
-    > CONSTRAINT fk_ba_book FOREIGN KEY (book_id) REFERENCES book (book_id),
-    > CONSTRAINT fk_ba_author FOREIGN KEY (author_id) REFERENCES author (author_id)
-    > );
-    > 
-    > CREATE TABLE address_status (
-    > status_id NUMBER,
-    > address_status VARCHAR2(30),
-    > CONSTRAINT pk_addr_status PRIMARY KEY (status_id)
-    > );
-    > 
-    > CREATE TABLE country (
-    > country_id NUMBER,
-    > country_name VARCHAR2(200),
-    > CONSTRAINT pk_country PRIMARY KEY (country_id)
-    > );
-    > 
-    > CREATE TABLE address (
-    > address_id NUMBER,
-    > street_number VARCHAR2(10),
-    > street_name VARCHAR2(200),
-    > city VARCHAR2(100),
-    > country_id NUMBER,
-    > CONSTRAINT pk_address PRIMARY KEY (address_id),
-    > CONSTRAINT fk_addr_ctry FOREIGN KEY (country_id) REFERENCES country (country_id)
-    > );
-    > 
-    > CREATE TABLE customer (
-    > customer_id NUMBER,
-    > first_name VARCHAR2(200),
-    > last_name VARCHAR2(200),
-    > email VARCHAR2(350),
-    > CONSTRAINT pk_customer PRIMARY KEY (customer_id)
-    > );
-    > 
-    > CREATE TABLE customer_address (
-    > customer_id NUMBER,
-    > address_id NUMBER,
-    > status_id NUMBER,
-    > CONSTRAINT pk_custaddr PRIMARY KEY (customer_id, address_id),
-    > CONSTRAINT fk_ca_cust FOREIGN KEY (customer_id) REFERENCES customer (customer_id),
-    > CONSTRAINT fk_ca_addr FOREIGN KEY (address_id) REFERENCES address (address_id)
-    > );
-    > 
-    > CREATE TABLE shipping_method (
-    > method_id NUMBER,
-    > method_name VARCHAR2(100),
-    > cost DECIMAL(6, 2),
-    > CONSTRAINT pk_shipmethod PRIMARY KEY (method_id)
-    > );
-    > 
-    > CREATE SEQUENCE seq_custorder;
-    > 
-    > CREATE TABLE cust_order (
-    > order_id NUMBER,
-    > order_date DATE,
-    > customer_id NUMBER,
-    > shipping_method_id NUMBER,
-    > dest_address_id NUMBER,
-    > CONSTRAINT pk_custorder PRIMARY KEY (order_id),
-    > CONSTRAINT fk_order_cust FOREIGN KEY (customer_id) REFERENCES customer (customer_id),
-    > CONSTRAINT fk_order_ship FOREIGN KEY (shipping_method_id) REFERENCES shipping_method (method_id),
-    > CONSTRAINT fk_order_addr FOREIGN KEY (dest_address_id) REFERENCES address (address_id)
-    > );
-    > 
-    > CREATE TABLE order_status (
-    > status_id NUMBER,
-    > status_value VARCHAR2(20),
-    > CONSTRAINT pk_orderstatus PRIMARY KEY (status_id)
-    > );
-    > 
-    > CREATE SEQUENCE seq_orderline;
-    > 
-    > CREATE TABLE order_line (
-    > line_id NUMBER,
-    > order_id NUMBER,
-    > book_id NUMBER,
-    > price NUMBER(5, 2),
-    > CONSTRAINT pk_orderline PRIMARY KEY (line_id),
-    > CONSTRAINT fk_ol_order FOREIGN KEY (order_id) REFERENCES cust_order (order_id),
-    > CONSTRAINT fk_ol_book FOREIGN KEY (book_id) REFERENCES book (book_id)
-    > );
-    > 
-    > CREATE SEQUENCE seq_orderhist;
-    > 
-    > CREATE TABLE order_history (
-    > history_id NUMBER,
-    > order_id NUMBER,
-    > status_id NUMBER,
-    > status_date DATE,
-    > CONSTRAINT pk_orderhist PRIMARY KEY (history_id),
-    > CONSTRAINT fk_oh_order FOREIGN KEY (order_id) REFERENCES cust_order (order_id),
-    > CONSTRAINT fk_oh_status FOREIGN KEY (status_id) REFERENCES order_status (status_id)
-    > );
-    > 
-    > 너가 쿼리를 짜기위해 step-by-step으로 생각할 과정은 다음과 같아.
-    > 
-    > 1. **dentify Date and Order Counts:** Select the order date and count the number of orders for that date using **`COUNT()`** aggregated by the order date.
-    > 2. **Sum Book Quantities and Total Prices:** Calculate the total number of books ordered and the total price for orders on each date using **`SUM()`**.
-    > 3. **Calculate Running Totals:** For the running total of books for the month, use a window function like **`SUM()`** with the **`OVER()`** clause partitioned by the month.
-    > 4. **Compare with Previous Week Data:** To get the number of books from the same day last week, you can use a subquery with a date filter subtracting 7 days from the order date.
-    > 5. **Aggregate Monthly and Overall Totals:** Use **`GROUP BY`** with rollup or grouping sets to include subtotals for each month and a grand total.
-    > 6. **Combine All Results:** Use a combination of GROUP BY and window functions to bring all these data points together.
-    > 
-    > → 자 이제 Show [1] the order date, [2] the number of orders for that date, [3] the number of books ordered, [4] the total price of the orders, [5] the running total of books for the month, [6] the number of books from the same day last week, and [7] all of these totals (from [1] to [6]) should also show for each month and overall의 결과를 출력하는 쿼리를 작성해줘.
-    > 
+        > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
+        > 
+        > 
+        > CREATE TABLE author (
+        > author_id NUMBER,
+        > author_name VARCHAR2(400),
+        > CONSTRAINT pk_author PRIMARY KEY (author_id)
+        > );
+        > 
+        > CREATE TABLE publisher (
+        > publisher_id NUMBER,
+        > publisher_name VARCHAR2(400),
+        > CONSTRAINT pk_publisher PRIMARY KEY (publisher_id)
+        > );
+        > 
+        > CREATE TABLE book_language (
+        > language_id NUMBER,
+        > language_code VARCHAR2(8),
+        > language_name VARCHAR2(50),
+        > CONSTRAINT pk_language PRIMARY KEY (language_id)
+        > );
+        > 
+        > CREATE TABLE book (
+        > book_id NUMBER,
+        > title VARCHAR2(400),
+        > isbn13 VARCHAR2(13),
+        > language_id NUMBER,
+        > num_pages NUMBER,
+        > publication_date DATE,
+        > publisher_id NUMBER,
+        > CONSTRAINT pk_book PRIMARY KEY (book_id),
+        > CONSTRAINT fk_book_lang FOREIGN KEY (language_id) REFERENCES book_language (language_id),
+        > CONSTRAINT fk_book_pub FOREIGN KEY (publisher_id) REFERENCES publisher (publisher_id)
+        > );
+        > 
+        > CREATE TABLE book_author (
+        > book_id NUMBER,
+        > author_id NUMBER,
+        > CONSTRAINT pk_bookauthor PRIMARY KEY (book_id, author_id),
+        > CONSTRAINT fk_ba_book FOREIGN KEY (book_id) REFERENCES book (book_id),
+        > CONSTRAINT fk_ba_author FOREIGN KEY (author_id) REFERENCES author (author_id)
+        > );
+        > 
+        > CREATE TABLE address_status (
+        > status_id NUMBER,
+        > address_status VARCHAR2(30),
+        > CONSTRAINT pk_addr_status PRIMARY KEY (status_id)
+        > );
+        > 
+        > CREATE TABLE country (
+        > country_id NUMBER,
+        > country_name VARCHAR2(200),
+        > CONSTRAINT pk_country PRIMARY KEY (country_id)
+        > );
+        > 
+        > CREATE TABLE address (
+        > address_id NUMBER,
+        > street_number VARCHAR2(10),
+        > street_name VARCHAR2(200),
+        > city VARCHAR2(100),
+        > country_id NUMBER,
+        > CONSTRAINT pk_address PRIMARY KEY (address_id),
+        > CONSTRAINT fk_addr_ctry FOREIGN KEY (country_id) REFERENCES country (country_id)
+        > );
+        > 
+        > CREATE TABLE customer (
+        > customer_id NUMBER,
+        > first_name VARCHAR2(200),
+        > last_name VARCHAR2(200),
+        > email VARCHAR2(350),
+        > CONSTRAINT pk_customer PRIMARY KEY (customer_id)
+        > );
+        > 
+        > CREATE TABLE customer_address (
+        > customer_id NUMBER,
+        > address_id NUMBER,
+        > status_id NUMBER,
+        > CONSTRAINT pk_custaddr PRIMARY KEY (customer_id, address_id),
+        > CONSTRAINT fk_ca_cust FOREIGN KEY (customer_id) REFERENCES customer (customer_id),
+        > CONSTRAINT fk_ca_addr FOREIGN KEY (address_id) REFERENCES address (address_id)
+        > );
+        > 
+        > CREATE TABLE shipping_method (
+        > method_id NUMBER,
+        > method_name VARCHAR2(100),
+        > cost DECIMAL(6, 2),
+        > CONSTRAINT pk_shipmethod PRIMARY KEY (method_id)
+        > );
+        > 
+        > CREATE SEQUENCE seq_custorder;
+        > 
+        > CREATE TABLE cust_order (
+        > order_id NUMBER,
+        > order_date DATE,
+        > customer_id NUMBER,
+        > shipping_method_id NUMBER,
+        > dest_address_id NUMBER,
+        > CONSTRAINT pk_custorder PRIMARY KEY (order_id),
+        > CONSTRAINT fk_order_cust FOREIGN KEY (customer_id) REFERENCES customer (customer_id),
+        > CONSTRAINT fk_order_ship FOREIGN KEY (shipping_method_id) REFERENCES shipping_method (method_id),
+        > CONSTRAINT fk_order_addr FOREIGN KEY (dest_address_id) REFERENCES address (address_id)
+        > );
+        > 
+        > CREATE TABLE order_status (
+        > status_id NUMBER,
+        > status_value VARCHAR2(20),
+        > CONSTRAINT pk_orderstatus PRIMARY KEY (status_id)
+        > );
+        > 
+        > CREATE SEQUENCE seq_orderline;
+        > 
+        > CREATE TABLE order_line (
+        > line_id NUMBER,
+        > order_id NUMBER,
+        > book_id NUMBER,
+        > price NUMBER(5, 2),
+        > CONSTRAINT pk_orderline PRIMARY KEY (line_id),
+        > CONSTRAINT fk_ol_order FOREIGN KEY (order_id) REFERENCES cust_order (order_id),
+        > CONSTRAINT fk_ol_book FOREIGN KEY (book_id) REFERENCES book (book_id)
+        > );
+        > 
+        > CREATE SEQUENCE seq_orderhist;
+        > 
+        > CREATE TABLE order_history (
+        > history_id NUMBER,
+        > order_id NUMBER,
+        > status_id NUMBER,
+        > status_date DATE,
+        > CONSTRAINT pk_orderhist PRIMARY KEY (history_id),
+        > CONSTRAINT fk_oh_order FOREIGN KEY (order_id) REFERENCES cust_order (order_id),
+        > CONSTRAINT fk_oh_status FOREIGN KEY (status_id) REFERENCES order_status (status_id)
+        > );
+        > 
+        > 너가 쿼리를 짜기위해 step-by-step으로 생각할 과정은 다음과 같아.
+        > 
+        > 1. **dentify Date and Order Counts:** Select the order date and count the number of orders for that date using **`COUNT()`** aggregated by the order date.
+        > 2. **Sum Book Quantities and Total Prices:** Calculate the total number of books ordered and the total price for orders on each date using **`SUM()`**.
+        > 3. **Calculate Running Totals:** For the running total of books for the month, use a window function like **`SUM()`** with the **`OVER()`** clause partitioned by the month.
+        > 4. **Compare with Previous Week Data:** To get the number of books from the same day last week, you can use a subquery with a date filter subtracting 7 days from the order date.
+        > 5. **Aggregate Monthly and Overall Totals:** Use **`GROUP BY`** with rollup or grouping sets to include subtotals for each month and a grand total.
+        > 6. **Combine All Results:** Use a combination of GROUP BY and window functions to bring all these data points together.
+        > 
+        > → 자 이제 Show [1] the order date, [2] the number of orders for that date, [3] the number of books ordered, [4] the total price of the orders, [5] the running total of books for the month, [6] the number of books from the same day last week, and [7] all of these totals (from [1] to [6]) should also show for each month and overall의 결과를 출력하는 쿼리를 작성해줘.
+        > 
 
 - 프롬프트 끝
 
   
 - 결과
 
-    WITH OrderDetails AS (
-      SELECT 
-        o.order_id, 
-        o.order_date, 
-        ol.book_id, 
-        ol.price, 
-        EXTRACT(MONTH FROM o.order_date) AS order_month,
-        EXTRACT(YEAR FROM o.order_date) AS order_year,
-        LAG(o.order_date, 7) OVER (ORDER BY o.order_date) AS last_week_date
-      FROM 
-        cust_order o
-        JOIN order_line ol ON o.order_id = ol.order_id
-    ),
-    BookTotals AS (
-      SELECT 
-        order_date, 
-        COUNT(DISTINCT order_id) AS num_orders, 
-        COUNT(book_id) AS num_books, 
-        SUM(price) AS total_price,
-        SUM(COUNT(book_id)) OVER (PARTITION BY order_month, order_year ORDER BY order_date) AS running_total_books,
-        (SELECT COUNT(book_id) FROM OrderDetails WHERE order_date = last_week_date) AS last_week_books
-      FROM 
-        OrderDetails
-      GROUP BY 
-        order_date, 
-        order_month, 
-        order_year, 
-        last_week_date
-    )
-    SELECT 
-      order_date, 
-      num_orders, 
-      num_books, 
-      total_price,
-      running_total_books,
-      last_week_books
-    FROM 
-      BookTotals
-    ORDER BY 
-      order_date;
+        WITH OrderDetails AS (
+          SELECT 
+            o.order_id, 
+            o.order_date, 
+            ol.book_id, 
+            ol.price, 
+            EXTRACT(MONTH FROM o.order_date) AS order_month,
+            EXTRACT(YEAR FROM o.order_date) AS order_year,
+            LAG(o.order_date, 7) OVER (ORDER BY o.order_date) AS last_week_date
+          FROM 
+            cust_order o
+            JOIN order_line ol ON o.order_id = ol.order_id
+        ),
+        BookTotals AS (
+          SELECT 
+            order_date, 
+            COUNT(DISTINCT order_id) AS num_orders, 
+            COUNT(book_id) AS num_books, 
+            SUM(price) AS total_price,
+            SUM(COUNT(book_id)) OVER (PARTITION BY order_month, order_year ORDER BY order_date) AS running_total_books,
+            (SELECT COUNT(book_id) FROM OrderDetails WHERE order_date = last_week_date) AS last_week_books
+          FROM 
+            OrderDetails
+          GROUP BY 
+            order_date, 
+            order_month, 
+            order_year, 
+            last_week_date
+        )
+        SELECT 
+          order_date, 
+          num_orders, 
+          num_books, 
+          total_price,
+          running_total_books,
+          last_week_books
+        FROM 
+          BookTotals
+        ORDER BY 
+          order_date;
     
 
 ---
@@ -2450,84 +2456,84 @@
 
 - 프롬프트 시작
   
-    > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
-    > 
-    > 
-    > CREATE TABLE DEPT (
-    > DEPTNO NUMBER(2) CONSTRAINT PK_DEPT PRIMARY KEY,
-    > DNAME VARCHAR2(14) ,
-    > LOC VARCHAR2(13) ) ;
-    > 
-    > CREATE TABLE EMP(
-    > EMPNO NUMBER(4) CONSTRAINT PK_EMP PRIMARY KEY,
-    > ENAME VARCHAR2(10),
-    > JOB VARCHAR2(9),
-    > MGR NUMBER(4),
-    > HIREDATE DATE,
-    > SAL NUMBER(7,2),
-    > COMM NUMBER(7,2),
-    > DEPTNO NUMBER(2) CONSTRAINT FK_DEPTNO REFERENCES DEPT);
-    > 
-    > CREATE TABLE BONUS (
-    > ENAME VARCHAR2(10) ,
-    > JOB VARCHAR2(9)  ,
-    > SAL NUMBER,
-    > COMM NUMBER
-    > ) ;
-    > 
-    > CREATE TABLE SALGRADE (
-    > GRADE NUMBER,
-    > LOSAL NUMBER,
-    > HISAL NUMBER
-    > );
-    > 
-    > 너가 쿼리를 짜기위해 step-by-step으로 생각할 과정은 다음과 같아.
-    > 
-    > 너가 쿼리를 짜기위해 step-by-step으로 생각할 과정은 다음과 같아.
-    > 
-    > 1. **dentify Date and Order Counts:** Select the order date and count the number of orders for that date using **`COUNT()`** aggregated by the order date.
-    > 2. **Sum Book Quantities and Total Prices:** Calculate the total number of books ordered and the total price for orders on each date using **`SUM()`**.
-    > 3. **Calculate Running Totals:** For the running total of books for the month, use a window function like **`SUM()`** with the **`OVER()`** clause partitioned by the month.
-    > 4. **Compare with Previous Week Data:** To get the number of books from the same day last week, you can use a subquery with a date filter subtracting 7 days from the order date.
-    > 5. **Aggregate Monthly and Overall Totals:** Use **`GROUP BY`** with rollup or grouping sets to include subtotals for each month and a grand total.
-    > 6. **Combine All Results:** Use a combination of GROUP BY and window functions to bring all these data points together.
-    > 
-    > *주의 사항
-    > 
-    > 1. 오류가 나지 않게 주의해
-    > 2. **Subquery Selection**: The inner subquery selects **`order_date`** and **`order_id`** from **`cust_order`** and joins with **`order_line`** to get the book quantities and total prices per order.
-    > 3. **Date Filtering**: A WHERE clause filters orders to a specific range, such as the last year in the example provided with **`ADD_MONTHS(TRUNC(SYSDATE, 'YY'), -12)`**.
-    > 4. **Aggregation**: Within the subquery, **`GROUP BY`** is used to aggregate data per order date and order ID to get distinct counts and sums.
-    > 5. **Running Total Calculation**: The **`SUM() OVER()`** window function, partitioned by month and ordered by date, calculates the running total of books for each month.
-    > 6. **Previous Week Comparison**: The **`LAG()`** function retrieves the number of books from the same day of the previous week.
-    > 7. **Grouping and Rollup**: **`GROUP BY ROLLUP`** allows for the creation of subtotal and total rows for each month and the entire result set, respectively.
-    > 8. **Final Selection**: The outer query selects the month, order date, number of orders, books ordered, total price, running total, and books from the last week's same day.
-    > 9. **Ordering Results**: The **`ORDER BY`** clause at the end ensures the results are ordered by month and date in descending order to present the data cohesively.
-    > 
-    > → 이걸 주의하면서 Show [1] the order date, [2] the number of orders for that date, [3] the number of books ordered, [4] the total price of the orders, [5] the running total of books for the month, [6] the number of books from the same day last week, and [7] all of these totals (from [1] to [6]) should also show for each month and overall의 결과를 출력하는 쿼리를 작성해줘. 쿼리 결과만 주면 돼. 특히 오류가 나지 않도록 조심해!
-    > 
+        > 아까와 똑같은 가이드라인으로 쿼리를 작성할거야. 이제는 스키마를 알려줄건데, 여기서 주의할 점은 !!!!!!!!!!!!!!!!!!!!!! 무조건 주어진 스키마들만 사용해야 한다는거야!!!!!!!!!!!!!!!!!!!!!!!!!!
+        > 
+        > 
+        > CREATE TABLE DEPT (
+        > DEPTNO NUMBER(2) CONSTRAINT PK_DEPT PRIMARY KEY,
+        > DNAME VARCHAR2(14) ,
+        > LOC VARCHAR2(13) ) ;
+        > 
+        > CREATE TABLE EMP(
+        > EMPNO NUMBER(4) CONSTRAINT PK_EMP PRIMARY KEY,
+        > ENAME VARCHAR2(10),
+        > JOB VARCHAR2(9),
+        > MGR NUMBER(4),
+        > HIREDATE DATE,
+        > SAL NUMBER(7,2),
+        > COMM NUMBER(7,2),
+        > DEPTNO NUMBER(2) CONSTRAINT FK_DEPTNO REFERENCES DEPT);
+        > 
+        > CREATE TABLE BONUS (
+        > ENAME VARCHAR2(10) ,
+        > JOB VARCHAR2(9)  ,
+        > SAL NUMBER,
+        > COMM NUMBER
+        > ) ;
+        > 
+        > CREATE TABLE SALGRADE (
+        > GRADE NUMBER,
+        > LOSAL NUMBER,
+        > HISAL NUMBER
+        > );
+        > 
+        > 너가 쿼리를 짜기위해 step-by-step으로 생각할 과정은 다음과 같아.
+        > 
+        > 너가 쿼리를 짜기위해 step-by-step으로 생각할 과정은 다음과 같아.
+        > 
+        > 1. **dentify Date and Order Counts:** Select the order date and count the number of orders for that date using **`COUNT()`** aggregated by the order date.
+        > 2. **Sum Book Quantities and Total Prices:** Calculate the total number of books ordered and the total price for orders on each date using **`SUM()`**.
+        > 3. **Calculate Running Totals:** For the running total of books for the month, use a window function like **`SUM()`** with the **`OVER()`** clause partitioned by the month.
+        > 4. **Compare with Previous Week Data:** To get the number of books from the same day last week, you can use a subquery with a date filter subtracting 7 days from the order date.
+        > 5. **Aggregate Monthly and Overall Totals:** Use **`GROUP BY`** with rollup or grouping sets to include subtotals for each month and a grand total.
+        > 6. **Combine All Results:** Use a combination of GROUP BY and window functions to bring all these data points together.
+        > 
+        > *주의 사항
+        > 
+        > 1. 오류가 나지 않게 주의해
+        > 2. **Subquery Selection**: The inner subquery selects **`order_date`** and **`order_id`** from **`cust_order`** and joins with **`order_line`** to get the book quantities and total prices per order.
+        > 3. **Date Filtering**: A WHERE clause filters orders to a specific range, such as the last year in the example provided with **`ADD_MONTHS(TRUNC(SYSDATE, 'YY'), -12)`**.
+        > 4. **Aggregation**: Within the subquery, **`GROUP BY`** is used to aggregate data per order date and order ID to get distinct counts and sums.
+        > 5. **Running Total Calculation**: The **`SUM() OVER()`** window function, partitioned by month and ordered by date, calculates the running total of books for each month.
+        > 6. **Previous Week Comparison**: The **`LAG()`** function retrieves the number of books from the same day of the previous week.
+        > 7. **Grouping and Rollup**: **`GROUP BY ROLLUP`** allows for the creation of subtotal and total rows for each month and the entire result set, respectively.
+        > 8. **Final Selection**: The outer query selects the month, order date, number of orders, books ordered, total price, running total, and books from the last week's same day.
+        > 9. **Ordering Results**: The **`ORDER BY`** clause at the end ensures the results are ordered by month and date in descending order to present the data cohesively.
+        > 
+        > → 이걸 주의하면서 Show [1] the order date, [2] the number of orders for that date, [3] the number of books ordered, [4] the total price of the orders, [5] the running total of books for the month, [6] the number of books from the same day last week, and [7] all of these totals (from [1] to [6]) should also show for each month and overall의 결과를 출력하는 쿼리를 작성해줘. 쿼리 결과만 주면 돼. 특히 오류가 나지 않도록 조심해!
+        > 
 
 - 프롬프트 끝
   
 - 결과
     
-    SELECT COALESCE(TO_CHAR(order_date, 'YYYY-MM'), 'Total') AS Order_Month,
-           order_date,
-           COUNT(DISTINCT order_id) AS Number_of_Orders,
-           SUM(quantity) AS Number_of_Books_Ordered,
-           SUM(total_price) AS Total_Price_of_Orders,
-           SUM(SUM(quantity)) OVER (PARTITION BY TO_CHAR(order_date, 'YYYY-MM') ORDER BY order_date) AS Running_Total_for_Month,
-           LAG(SUM(quantity), 7) OVER (ORDER BY order_date) AS Books_Last_Week_Same_Day
-    FROM (SELECT o.order_date, 
-                 o.order_id, 
-                 COUNT(l.book_id) AS quantity, 
-                 SUM(l.price) AS total_price
-          FROM cust_order o
-          LEFT JOIN order_line l ON o.order_id = l.order_id
-          WHERE o.order_date >= ADD_MONTHS(TRUNC(SYSDATE, 'YY'), -12) -- Considering last one year for sample
-          GROUP BY o.order_date, o.order_id) 
-    GROUP BY ROLLUP (TO_CHAR(order_date, 'YYYY-MM'), order_date)
-    ORDER BY Order_Month DESC, order_date DESC;
+        SELECT COALESCE(TO_CHAR(order_date, 'YYYY-MM'), 'Total') AS Order_Month,
+               order_date,
+               COUNT(DISTINCT order_id) AS Number_of_Orders,
+               SUM(quantity) AS Number_of_Books_Ordered,
+               SUM(total_price) AS Total_Price_of_Orders,
+               SUM(SUM(quantity)) OVER (PARTITION BY TO_CHAR(order_date, 'YYYY-MM') ORDER BY order_date) AS Running_Total_for_Month,
+               LAG(SUM(quantity), 7) OVER (ORDER BY order_date) AS Books_Last_Week_Same_Day
+        FROM (SELECT o.order_date, 
+                     o.order_id, 
+                     COUNT(l.book_id) AS quantity, 
+                     SUM(l.price) AS total_price
+              FROM cust_order o
+              LEFT JOIN order_line l ON o.order_id = l.order_id
+              WHERE o.order_date >= ADD_MONTHS(TRUNC(SYSDATE, 'YY'), -12) -- Considering last one year for sample
+              GROUP BY o.order_date, o.order_id) 
+        GROUP BY ROLLUP (TO_CHAR(order_date, 'YYYY-MM'), order_date)
+        ORDER BY Order_Month DESC, order_date DESC;
     
     ***분석***
     
