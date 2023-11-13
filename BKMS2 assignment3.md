@@ -7,6 +7,7 @@
 2023-22378
 
 - ChatGPT 4 사용
+- https://github.com/xxxdokki/bkms2/blob/fbaa8db3d5d6fecb1d429917d7a3a37bbfd8b77e/BKMS2%20assignment3.md -> 권장
 - [https://www.notion.so/BKMS2-assignment3-8386851b79f748e8a87597312a4ccfa4?pvs=4](https://www.notion.so/BKMS2-assignment3-8386851b79f748e8a87597312a4ccfa4?pvs=21) 에서 더 간단히 살펴볼 수 있음.
 
 ### 첫 번째 문제
