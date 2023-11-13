@@ -255,8 +255,9 @@
         > 
         > 
         > -> 자 이제  "Find the department that has the highest average salary" 문제를 해결하는 SQL 쿼리를 생성해줘
-        > 
-        
+        >
+  
+- 쿼리 끝
         결과
         
         ```sql
